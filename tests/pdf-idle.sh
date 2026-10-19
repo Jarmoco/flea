@@ -41,7 +41,7 @@ mkdir -p "$idle_work"/{config,home,runtime,tmp} || exit 1
 chmod 700 "$idle_work/runtime" || exit 1
 ln -s "$PWD/tests/pdf-idle.qml" "$idle_work/config/shell.qml" || exit 1
 headless_commons "$idle_work" || exit 1
-ln -s /usr/share/omarchy/shell/Ui "$idle_work/config/Ui" || exit 1
+ln -s "$(readlink -f ui/boot/Ui)" "$idle_work/config/Ui" || exit 1
 
 # Two light pages for the walk legs, and one photographic page whose render outlasts the settle.
 pdf_a="$idle_work/a.pdf"

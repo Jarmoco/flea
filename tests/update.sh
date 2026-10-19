@@ -198,8 +198,11 @@ out=$(env -i HOME="$D/home" PATH="$D/empty" "$BIN" --update 2>&1); rc=$?
 check "a box with no presenter is the failure status" "2" "$rc"
 check "and one sentence saying nothing was updated" "flea: Omarchy's updater could not be started, so nothing was updated" "$out"
 
-# The presenter ships in the omarchy package, which PKGBUILD must depend on or the row opens nothing.
-check "PKGBUILD depends on omarchy, which ships $presenter" "1" "$(grep -c "^depends=.*'omarchy'" PKGBUILD)"
+# The presenter ships in the desktop shell's package, which PKGBUILD must name or the row opens
+# nothing. It is an optdepend, not a hard one: the window itself needs no desktop shell, and the
+# updater refuses cleanly where there is none.
+check "PKGBUILD names omarchy, which ships $presenter" "1" "$(grep -cE "^(depends|optdepends)=.*'omarchy" PKGBUILD)"
+check "and the window does not need it, so omarchy is not a hard dependency" "0" "$(grep -c "^depends=.*'omarchy'" PKGBUILD)"
 
 sandbox_remove "$D"
 [ "$fail" -eq 0 ] && echo "update: all checks passed"

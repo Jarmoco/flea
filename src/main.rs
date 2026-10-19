@@ -25,6 +25,7 @@ mod runid;
 mod terminal;
 mod tui;
 mod thp;
+mod themedir;
 mod unlock;
 mod uischema;
 mod uimigrate;

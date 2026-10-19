@@ -1,7 +1,7 @@
 # Installing Flea
 
-Flea is for Omarchy: `omarchy` and `quickshell` are hard dependencies, so it will not install on a
-plain Arch box.
+Flea needs `quickshell` and nothing else: the desktop shell is optional, and Flea reads its theme
+when the shell is installed and draws with a palette of its own when it is not.
 
 Flea installs as an Arch package, so pacman owns both ends: `makepkg -si` puts it on, `pacman -Rns`
 takes it off, and pacman's own file list is what makes the second claim provable. There is no
@@ -74,7 +74,7 @@ uncommitted edits are what gets packaged.
 |---|---|
 | `/usr/bin/flea` | the binary, backend and launcher both |
 | `/usr/share/flea/ui/` | the Quickshell UI, which `paths.rs` looks for by `boot/shell.qml` |
-| `/usr/share/flea/ui/Commons`, `/usr/share/flea/ui/Ui` | symlinks into `/usr/share/omarchy/shell/`, reached from QML as `qs.Commons` |
+| `/usr/share/flea/ui/Commons`, `/usr/share/flea/ui/Ui` | Flea's own token layer and widget kit, reached from QML as `qs.Commons` and `qs.Ui` |
 | `/usr/lib/flea/flea-portal` | the XDG portal backend, which answers `org.freedesktop.impl.portal.FileChooser` |
 | `/usr/lib/flea/flea-filemanager1` | the D-Bus service, which answers `org.freedesktop.FileManager1` for "Show in folder" |
 | `/usr/share/dbus-1/services/com.thisisgm.flea.FileManager1.service` | what D-Bus activates that with |
@@ -90,8 +90,9 @@ uncommitted edits are what gets packaged.
 The count is whatever the built archive declares, not a number written down here: the UI grows a file
 whenever a component is added, so a figure pinned in this paragraph would be stale by the next commit.
 `packaging/flea-package-test` reads the count out of the archive and fails if the fake root does not
-hold exactly that many. The two symlinks are why `omarchy` is a hard dependency: they point into a
-directory that package owns.
+hold exactly that many. The token layer and the widget kit are Flea's own, so the package carries
+them; the config root's two links are relative, so both paths resolve to one real file and the
+window reads one copy of each.
 
 ## An iPhone's tethering connection
 

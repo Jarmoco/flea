@@ -8161,7 +8161,7 @@ case_network() {
         shot network-shares-font-reflow
         key -M ctrl -M shift -k 0 -m shift -m ctrl >/dev/null || fail 'network: text-size reset chord failed'
         settings_wait_value '.display.textSize.mode == "system"'
-        [[ "$(token_of baseSize)" == "$font_before" ]] || fail 'network: Follow Omarchy did not restore the original font'
+        [[ "$(token_of baseSize)" == "$font_before" ]] || fail 'network: Follow the theme did not restore the original font'
         network_share_geometry 'font reset restores the original owner rectangle' "$hidden_rect"
         printf 'NETWORK shares-tab-focus=exact shares-resize=exact shares-font-reflow=exact checks=%s\n' "$network_geometry_checks"
     }
@@ -12871,8 +12871,8 @@ settings_display() {
     [[ -n "$settings_title_on_display" ]] || fail "settings: the panel has no title to measure"
     local omarchy_base
     omarchy_base=$(token_of baseSize)
-    [[ "$(ipc settingsRows)" == *"choice|Text size|Follow Omarchy"* ]] \
-        || fail "settings: Display did not open on Follow Omarchy, got $(ipc settingsRows)"
+    [[ "$(ipc settingsRows)" == *"choice|Text size|Follow the theme"* ]] \
+        || fail "settings: Display did not open on Follow the theme, got $(ipc settingsRows)"
     [[ "$(ipc settingsRows)" == *"fact|Effective|${omarchy_base} px"* ]] \
         || fail "settings: the ruler does not report Omarchy's own ${omarchy_base}px"
     # Read-only means read-only: the compositor's two rows are facts, and no control sits on them.
@@ -12919,8 +12919,8 @@ settings_display() {
     settle
     key -k Return >/dev/null
     settle
-    [[ "$(ipc settingsRows)" == *"choice|Text size|Follow Omarchy"* ]] \
-        || fail "settings: the mode row did not go back to Follow Omarchy"
+    [[ "$(ipc settingsRows)" == *"choice|Text size|Follow the theme"* ]] \
+        || fail "settings: the mode row did not go back to Follow the theme"
     [[ "$(ipc settingsRows)" == *"fact|Effective|${omarchy_base} px"* ]] \
         || fail "settings: following Omarchy again left the ruler on the override's stop"
     [[ "$(ipc metrics)" == "$before" ]] \
@@ -12968,7 +12968,7 @@ settings_chord_alias() {
         || fail "settings: Ctrl+Shift+0 did not announce following Omarchy, got $(ipc lastMessage)"
     settings_open_key
     settle
-    [[ "$(ipc settingsRows)" == *"choice|Text size|Follow Omarchy"* ]] \
+    [[ "$(ipc settingsRows)" == *"choice|Text size|Follow the theme"* ]] \
         || fail "settings: the chord's reset did not reach the panel's own mode row"
     key -k Escape >/dev/null
     settle

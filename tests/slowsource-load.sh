@@ -39,7 +39,7 @@ mkdir -p "$load_work"/{config,home,runtime,tmp} || exit 1
 chmod 700 "$load_work/runtime" || exit 1
 ln -s "$PWD/tests/slowsource-load.qml" "$load_work/config/shell.qml" || exit 1
 headless_commons "$load_work" || exit 1
-ln -s /usr/share/omarchy/shell/Ui "$load_work/config/Ui" || exit 1
+ln -s "$(readlink -f ui/boot/Ui)" "$load_work/config/Ui" || exit 1
 
 pass=0
 fail=0

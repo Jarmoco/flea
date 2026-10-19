@@ -64,6 +64,12 @@ install -Dm644 "$repo"/ui/js/*.js "$repo"/ui/js/*.mjs -t "$root/ui/js"
 install -Dm644 "$repo"/ui/vendor/*.mjs -t "$root/ui/vendor"
 install -Dm644 "$repo"/ui/vendor/LICENSES/* -t "$root/ui/vendor/LICENSES"
 install -Dm644 "$repo/ui/boot/shell.qml" "$repo/ui/boot/picker.qml" "$repo/ui/boot/fleatab.qml" "$repo/ui/boot/tabtearoff.qml" -t "$root/ui/boot"
+# Flea's own token layer and widget kit, reached as qs.Commons and qs.Ui.
+install -Dm644 "$repo/ui/Commons/qmldir" "$repo"/ui/Commons/*.qml "$repo"/ui/Commons/*.js -t "$root/ui/Commons"
+install -Dm644 "$repo/ui/Ui/qmldir" "$repo"/ui/Ui/*.qml -t "$root/ui/Ui"
+# The config root's links, relative so both paths resolve to one real file and one copy of each singleton.
+ln -s ../Commons "$root/ui/boot/Commons"
+ln -s ../Ui "$root/ui/boot/Ui"
 install -Dm644 "$repo/shelf/manifest.json" "$repo/shelf/README.md" "$repo"/shelf/*.qml "$repo"/shelf/*.js -t "$root/shelf"
 
 # Owner, order, modes, mtime and gzip's own header are fixed, so the same tree and binary give the same bytes.

@@ -43,7 +43,7 @@ mkdir -p "$config_dir" "$photos" "$runtime" || exit 1
 chmod 700 "$runtime" || exit 1
 ln -s "$PWD/tests/preview-decode.qml" "$config_dir/shell.qml" || exit 1
 headless_commons "$test_root" "$config_dir/Commons" || exit 1
-ln -s /usr/share/omarchy/shell/Ui "$config_dir/Ui" || exit 1
+ln -s "$(readlink -f ui/boot/Ui)" "$config_dir/Ui" || exit 1
 
 # Fifty sweep photos with a cache file each, the 6016x3900 PNG rest row and a text start row; only open events are counted, never pixels.
 printf 'preview decode rest row, not an image\n' > "$photos/note.txt" \

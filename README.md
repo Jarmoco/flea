@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>The fastest GUI file manager on Linux.</strong><br>
-  Keyboard-first. Built for Omarchy.
+  Keyboard-first. Built for your desktop's theme.
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
   <img src="docs/images/release-0.3.0-themes.gif" alt="Flea 0.3.0 cycling through ten Omarchy themes, with the iPhone on the Devices rail and a photo in the preview column">
 </p>
 
-Flea combines a Rust backend with a Quickshell interface that follows your Omarchy theme.
+Flea combines a Rust backend with a Quickshell interface that follows your desktop's theme.
 Large directories stay responsive: the window loads rows and requests thumbnails as you need them.
 
 - **Four views.** List, columns, grid and two panes side by side, with tabs and natural filename sorting.
@@ -37,7 +37,7 @@ Large directories stay responsive: the window loads rows and requests thumbnails
 - **Devices.** USB drives, phones and cameras over MTP, PTP and AFC, mounted from the rail. An encrypted drive unlocks from its rail row and locks again when you unmount it.
 - **Disk images.** Write an ISO or IMG to a USB drive, plain, compressed or inside a zip; Flea reads every byte back to verify it.
 - **Desktop integration.** Default file manager, “Show in folder” and Open/Save dialogs.
-- **Your settings.** Omarchy text sizes, configurable menus and Default, Vim, Mac or Windows keys.
+- **Your settings.** Your theme's text sizes, configurable menus and Default, Vim, Mac or Windows keys.
 
 A menu row that cannot act says why beside its label (offline, signed out, no devices), and muted
 text keeps a 4.5:1 contrast against its background.
@@ -268,7 +268,7 @@ See [the full key table](keys.toml) for preset bindings and pointer actions.
 
 ## Build
 
-Requires Omarchy, Quickshell 0.3.1 or newer, and Rust. See
+Requires Quickshell 0.3.1 or newer, and Rust. See
 [installation details](docs/install.md) for runtime and optional dependencies.
 
 ```bash

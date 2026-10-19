@@ -14,9 +14,14 @@ const FLOAT_END: &str = "-- flea --picker: end.";
 // The picker's own app id, ui/boot/picker.qml's AppId pragma, which is not the window's.
 const PICKER_APP_ID: &str = "com.thisisgm.flea.picker";
 // Omarchy binds both to Nautilus in default/hypr/bindings/applications.lua; the cwd one opens on the active terminal's directory.
+// The cwd helper is the desktop shell's, so a box without one falls back to the directory the key was pressed in.
 const BINDS: [(&str, &str, &str); 2] = [
     ("SUPER + SHIFT + F", "File manager", "flea --gui"),
-    ("SUPER + ALT + SHIFT + F", "File manager (cwd)", "flea --gui \"$(omarchy-cmd-terminal-cwd)\""),
+    (
+        "SUPER + ALT + SHIFT + F",
+        "File manager (cwd)",
+        "flea --gui \"$(omarchy-cmd-terminal-cwd 2>/dev/null || pwd)\"",
+    ),
 ];
 // hyprctl binds reports a chord as a mask: SUPER is 64, ALT is 8, SHIFT is 1.
 const MODMASKS: [u32; 2] = [65, 73];
@@ -283,7 +288,7 @@ mod tests {
         assert_eq!(b.matches("o.bind(").count(), 2);
         // The same launcher Omarchy's own { launch = } bindings use, and the cwd one reads the terminal's directory.
         assert!(b.contains("{ launch = 'flea --gui' }"));
-        assert!(b.contains("{ launch = 'flea --gui \"$(omarchy-cmd-terminal-cwd)\"' }"));
+        assert!(b.contains("{ launch = 'flea --gui \"$(omarchy-cmd-terminal-cwd 2>/dev/null || pwd)\"' }"));
     }
 
     #[test]

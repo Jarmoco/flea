@@ -44,7 +44,7 @@ mkdir -p "$first_work"/{config,home,runtime,tmp} || exit 1
 chmod 700 "$first_work/runtime" || exit 1
 ln -s "$PWD/tests/pdf-first.qml" "$first_work/config/shell.qml" || exit 1
 headless_commons "$first_work" || exit 1
-ln -s /usr/share/omarchy/shell/Ui "$first_work/config/Ui" || exit 1
+ln -s "$(readlink -f ui/boot/Ui)" "$first_work/config/Ui" || exit 1
 
 # Two pages: a 54-megapixel noise JPEG that renders past any turn, then a light page that lands at once.
 pdf="$first_work/first.pdf"

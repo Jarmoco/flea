@@ -103,8 +103,21 @@ fn rescan() {
     let _ = Command::new("omarchy-shell").args(["shell", "rescanPlugins"]).output();
 }
 
+// The shelf is a desktop shell bar plugin, so a box without the shell has
+// nowhere to install it and no command to enable it with. The shell's own
+// directory is the test, not the command's exit status.
+fn desktop_shell_installed() -> bool {
+    if let Some(path) = std::env::var_os("OMARCHY_PATH").filter(|value| !value.is_empty()) {
+        return Path::new(&path).is_dir();
+    }
+    Path::new("/usr/share/omarchy").is_dir()
+}
+
 // The switch itself, both ways.
 pub fn sync(enabled: bool) -> Result<(), String> {
+    if !desktop_shell_installed() {
+        return Ok(());
+    }
     let dest = installed()?;
     if !enabled {
         // Never installed here means nothing to disable, and asking would only print a refusal.
@@ -125,6 +138,9 @@ pub fn sync(enabled: bool) -> Result<(), String> {
 // A switch that is off owns no copy, so there is nothing to carry forward.
 pub fn refresh(enabled: bool) -> Result<(), String> {
     if !enabled {
+        return Ok(());
+    }
+    if !desktop_shell_installed() {
         return Ok(());
     }
     let (dest, source) = (installed()?, source());

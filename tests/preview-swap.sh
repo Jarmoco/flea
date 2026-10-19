@@ -42,7 +42,7 @@ mkdir -p "$swap_work"/{config,home,runtime,tmp} "$swap_work"/frames-column "$swa
 chmod 700 "$swap_work/runtime" || exit 1
 ln -s "$PWD/tests/preview-swap.qml" "$swap_work/config/shell.qml" || exit 1
 headless_commons "$swap_work" || exit 1
-ln -s /usr/share/omarchy/shell/Ui "$swap_work/config/Ui" || exit 1
+ln -s "$(readlink -f ui/boot/Ui)" "$swap_work/config/Ui" || exit 1
 
 run_surface() {
     # One local per line: bash expands every word of a local before assigning any, so out would read an unset surface.

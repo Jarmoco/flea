@@ -51,26 +51,26 @@ function runRows(check) {
     // The board's Display card: the text-size mode over its effective size, then the compositor's two read-only facts. No monitor-scale control, because Flea does not step or cycle that one.
     check("the Display section is text size, then Scale, then Appearance",
           kinds(display), "group|choice|ruler|hint|fact|group|fact|hint|group|check")
-    check("its one control opens on Follow Omarchy", find(display, "textMode").value,
-          "Follow Omarchy")
+    check("its one control opens on Follow the theme", find(display, "textMode").value,
+          "Follow the theme")
     // The board draws the mode as both names side by side, so the row names them rather than leaving ui/SettingsRow.qml to invent a second list that could disagree with the writer.
     check("and it names both its values, in the board's own order",
-          find(display, "textMode").labels.join("|"), "Follow Omarchy|Override")
+          find(display, "textMode").labels.join("|"), "Follow the theme|Override")
     // SettingsRest rule 2: the ruler carries the seven numbers, so it states the stop it marks and the hint keeps only the chords.
     check("the ruler stands for the stops themselves", display[2].stops.join(","), "9,10,11,12,14,16,20")
     check("and marks the one in force, five of the seven", display[2].index, 4)
-    // An Omarchy size that is not one of the seven still marks a stop, the nearest one.
+    // A theme size that is not one of the seven still marks a stop, the nearest one.
     var between = Settings.rows("display", displayState(TextSize.follow(), 13))
     check("a size between two stops marks the nearer one", between[2].index, 3)
     // The keys come from the running preset, spelled as a chord; the default preset binds these three.
-    check("the hint names the keys that step through the stops and the one that follows Omarchy", display[3].label,
-          "Ctrl+Shift++ and Ctrl+Shift+- step through them; Ctrl+Shift+0 follows Omarchy again.")
+    check("the hint names the keys that step through the stops and the one that follows the theme", display[3].label,
+          "Ctrl+Shift++ and Ctrl+Shift+- step through them; Ctrl+Shift+0 follows the theme again.")
     // And Effective stays, because in Follow it is the size running and the ruler's mark is not.
     check("Effective reports the size actually running", display[4].label + "|" + display[4].value + "|" + display[4].role,
           "Effective|14 px|live")
     check("and says so when the ruler cannot state it", between[4].value + "|" + between[4].caption,
-          "13 px|Omarchy's own size. The ruler marks 12, the nearest stop.")
-    check("a size that is a stop needs no such sentence", display[4].caption, "Omarchy's own size.")
+          "13 px|The theme's own size. The ruler marks 12, the nearest stop.")
+    check("a size that is a stop needs no such sentence", display[4].caption, "The theme's own size.")
     check("the monitor scale is the compositor's own number, and the row carries no control", display[6].value, "1x")
     check("a fractional one keeps its fraction",
           Settings.rows("display", displayState(TextSize.follow(), 14, 1.25))[6].value, "1.25x")

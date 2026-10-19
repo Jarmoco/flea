@@ -12,7 +12,7 @@ var SPONSORS_URL = "https://github.com/sponsors/thisisgm"
 function rows(state) {
     var facts = state.about || {}
     var out = [
-        { kind: "hero", label: "Flea", value: "A file manager for Omarchy" },
+        { kind: "hero", label: "Flea", value: "A file manager for Linux" },
         { kind: "fact", label: "Version", value: facts.version || "Not reported" },
         { kind: "fact", label: "Built", value: facts.built || "Not recorded in this build" },
         { kind: "fact", label: "Installed from", value: facts.source || "Not reported" },

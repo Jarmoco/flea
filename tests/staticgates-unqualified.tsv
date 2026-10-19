@@ -298,6 +298,27 @@ ui/ColumnsArea.qml	465	root	Declared QML id; component context access is valid a
 ui/ColumnsArea.qml	465	root	Declared QML id; component context access is valid at runtime.
 ui/ColumnsArea.qml	466	root	Declared QML id; component context access is valid at runtime.
 ui/ColumnsArea.qml	466	root	Declared QML id; component context access is valid at runtime.
+ui/Commons/Color.qml	15	Quickshell	Quickshell type unresolved when its module is missing.
+ui/Commons/Color.qml	22	Quickshell	Quickshell type unresolved when its module is missing.
+ui/Commons/Color.qml	25	Quickshell	Quickshell type unresolved when its module is missing.
+ui/Commons/Color.qml	27	Quickshell	Quickshell type unresolved when its module is missing.
+ui/Commons/Color.qml	136	root	Declared QML id; component context access is valid at runtime.
+ui/Commons/Color.qml	139	root	Declared QML id; component context access is valid at runtime.
+ui/Commons/Color.qml	139	text	Enclosing Quickshell StdioCollector, Process or FileView supplies this member.
+ui/Commons/Color.qml	144	root	Declared QML id; component context access is valid at runtime.
+ui/Commons/Color.qml	147	root	Declared QML id; component context access is valid at runtime.
+ui/Commons/Color.qml	147	text	Enclosing Quickshell StdioCollector, Process or FileView supplies this member.
+ui/Commons/Color.qml	148	root	Declared QML id; component context access is valid at runtime.
+ui/Commons/Color.qml	154	root	Declared QML id; component context access is valid at runtime.
+ui/Commons/Color.qml	157	root	Declared QML id; component context access is valid at runtime.
+ui/Commons/Color.qml	157	text	Enclosing Quickshell StdioCollector, Process or FileView supplies this member.
+ui/Commons/Color.qml	158	reload	Enclosing Quickshell StdioCollector, Process or FileView supplies this member.
+ui/Commons/Color.qml	159	root	Declared QML id; component context access is valid at runtime.
+ui/Commons/Compositor.qml	18	Quickshell	Quickshell type unresolved when its module is missing.
+ui/Commons/Compositor.qml	44	root	Declared QML id; component context access is valid at runtime.
+ui/Commons/Compositor.qml	44	text	Enclosing Quickshell StdioCollector, Process or FileView supplies this member.
+ui/Commons/Style.qml	231	text	Enclosing Quickshell StdioCollector, Process or FileView supplies this member.
+ui/Commons/Style.qml	232	root	Declared QML id; component context access is valid at runtime.
 ui/CompareView.qml	252	root	Declared QML id; component context access is valid at runtime.
 ui/CompareView.qml	253	view	Declared QML id; component context access is valid at runtime.
 ui/ContextMenu.qml	541	rows	Declared QML id; component context access is valid at runtime.

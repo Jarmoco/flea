@@ -138,6 +138,7 @@ import "settings.js" as SettingsSuite
 import "settingsmenus.js" as SettingsMenusSuite
 import "settingsshelf.js" as SettingsShelfSuite
 import "settingsabout.js" as SettingsAboutSuite
+import "ownpalette.js" as OwnPaletteSuite
 import "themes.js" as ThemesSuite
 import "transfer.js" as TransferSuite
 import "sort.js" as SortSuite
@@ -221,7 +222,7 @@ Item {
             ["sort", SortSuite], ["swap", SwapSuite], ["startup", StartupSuite], ["trashdates", TrashDatesSuite], ["permissions", PermissionsSuite], ["status", StatusSuite], ["statusfix", StatusFixSuite], ["taildrop", TaildropSuite], ["tags", TagsSuite], ["tagskeys", TagsKeysSuite], ["textsize", TextSizeSuite],
             ["trash", TrashSuite], ["trashdrop", TrashDropSuite], ["tap", TapSuite], ["marquee", MarqueeSuite], ["tabs", TabsSuite], ["tabcatcher", TabCatcherSuite], ["tabs-switch", TabsSwitchSuite], ["tabmove", TabMoveSuite], ["tabrestore", TabRestoreSuite], ["shelfmodel", ShelfModelSuite],
             ["mdgates", MdGatesSuite],
-            ["themes", ThemesSuite], ["thumbs", ThumbsSuite], ["extthumbs", ExtThumbsSuite], ["transfer", TransferSuite], ["uistate", UiStateSuite], ["unlock", UnlockSuite], ["update", UpdateSuite],
+            ["themes", ThemesSuite], ["ownpalette", OwnPaletteSuite], ["thumbs", ThumbsSuite], ["extthumbs", ExtThumbsSuite], ["transfer", TransferSuite], ["uistate", UiStateSuite], ["unlock", UnlockSuite], ["update", UpdateSuite],
             ["watch", WatchSuite], ["xwwatch", XwWatchSuite], ["xwanchor-races", XwAnchorRacesSuite], ["renameview", RenameViewSuite], ["xwrl4", Xwrl4Suite], ["gvfsbridge", GvfsBridgeSuite]
         ]
         var argv = Qt.application.arguments

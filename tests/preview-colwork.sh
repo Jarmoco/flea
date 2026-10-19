@@ -47,7 +47,7 @@ chmod 700 "$runtime" || exit 1
 ln -s "$PWD/tests/preview-colwork.qml" "$config_dir/shell.qml" || exit 1
 ln -s "$PWD/ui" "$config_dir/flea" || exit 1
 headless_commons "$test_root" "$config_dir/Commons" || exit 1
-ln -s /usr/share/omarchy/shell/Ui "$config_dir/Ui" || exit 1
+ln -s "$(readlink -f ui/boot/Ui)" "$config_dir/Ui" || exit 1
 
 head -c 4000 src/json.rs > "$fx/00-start.txt" || exit 1
 magick -size 2400x1600 plasma:fractal -seed 3 -quality 90 "$fx/10-photo.jpg" \

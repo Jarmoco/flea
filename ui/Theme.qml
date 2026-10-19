@@ -17,7 +17,12 @@ import "js/TextSize.js" as TextSize
 Singleton {
     id: root
 
-    readonly property string stateDir: Quickshell.env("HOME") + "/.local/state/omarchy/current"
+    // The theme's own directory and the file that names it, both owned by the
+    // palette reader so the two readers here cannot disagree about where a
+    // theme lives. The launcher picks the theme once and names it in the
+    // environment; a shell started without one falls back to the desktop's own.
+    readonly property string themeDir: Commons.Color.themeDir
+    readonly property string themeNamePath: Commons.Color.themeNamePath
 
     // The parsed colors.toml, for the code inks CodeLines lifts.
     property var palette: ({})
@@ -380,7 +385,7 @@ Singleton {
     // construction before any window, and the later onLoaded is a harmless idempotent second apply.
     FileView {
         id: colorsFile
-        path: root.stateDir + "/theme/colors.toml"
+        path: root.themeDir + "/colors.toml"
         blockLoading: true
         printErrors: false
         onLoaded: root.applyColors(text())
@@ -391,7 +396,7 @@ Singleton {
     // Color.loadShell refreshes Style's whole token scale, so the type ladder flips with the theme.
     FileView {
         id: shellFile
-        path: root.stateDir + "/theme/shell.toml"
+        path: root.themeDir + "/shell.toml"
         blockLoading: true
         printErrors: false
         onLoaded: Commons.Color.loadShell(text())
@@ -403,7 +408,7 @@ Singleton {
     // swap, which makes it the one event that survives, measured across three consecutive switches.
     FileView {
         id: themeNameFile
-        path: root.stateDir + "/theme.name"
+        path: root.themeNamePath
         blockLoading: true
         watchChanges: true
         printErrors: false

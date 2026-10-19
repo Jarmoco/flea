@@ -3,10 +3,11 @@
 pkgname=flea
 pkgver=0.3.12
 pkgrel=1
-pkgdesc='Fast, keyboard-first file manager for Omarchy'
+pkgdesc='Fast, keyboard-first file manager'
 arch=('x86_64' 'aarch64')
 license=('MIT' 'Apache-2.0' 'EPL-2.0' 'BSD-2-Clause')
-# omarchy owns /usr/share/omarchy/shell, which ui/Commons and ui/Ui link into; quickshell owns qs.
+# quickshell owns qs. The desktop shell is not required: ui/Commons and ui/Ui are Flea's own
+# token layer and widget kit, and a theme the desktop shell installed is still read when it is there.
 # util-linux ships prlimit, which the thumbnail and archive sandboxes require alongside bubblewrap.
 # xdg-terminal-exec is what --terminal execs, so the topbar's terminal button needs it installed.
 # udisks2 ships udisksctl, which the unlock dialog and the relock after unmount use.
@@ -30,11 +31,11 @@ license=('MIT' 'Apache-2.0' 'EPL-2.0' 'BSD-2-Clause')
 # quickjs-ng is what flea --figure-helper execs for Markdown maths and diagrams, so figures need it installed.
 
 # bat colours code previews and jq formats JSON before the sandbox renders it.
-depends=('bat' 'bubblewrap' 'expect' 'gcc-libs' 'glib2' 'glibc' 'gvfs' 'gvfs-afc' 'gvfs-dnssd' 'gvfs-gphoto2' 'gvfs-mtp' 'gvfs-nfs' 'gvfs-smb' 'hicolor-icon-theme' 'jq' 'kimageformats' 'libheif' 'omarchy' 'python' 'python-gobject' 'qt6-multimedia' 'qt6-webengine' 'quickjs-ng' 'quickshell' 'shared-mime-info' 'udisks2' 'usbmuxd' 'util-linux' 'wl-clipboard' 'xdg-terminal-exec' 'xdg-utils')
+depends=('bat' 'bubblewrap' 'expect' 'gcc-libs' 'glib2' 'glibc' 'gvfs' 'gvfs-afc' 'gvfs-dnssd' 'gvfs-gphoto2' 'gvfs-mtp' 'gvfs-nfs' 'gvfs-smb' 'hicolor-icon-theme' 'jq' 'kimageformats' 'libheif' 'python' 'python-gobject' 'qt6-multimedia' 'qt6-webengine' 'quickjs-ng' 'quickshell' 'shared-mime-info' 'udisks2' 'usbmuxd' 'util-linux' 'wl-clipboard' 'xdg-terminal-exec' 'xdg-utils')
 makedepends=('cargo')
 # Both packages own /usr/bin/flea, so pacman refuses the pair rather than leaving one half-installed.
 conflicts=('flea-git')
-optdepends=('libarchive: archive listing and extraction'
+optdepends=('libarchive: archive listing and extraction' 'omarchy: the desktop shell theme, its window rules and its updater'
             '7zip: 7z archive support'
             'imagemagick: image conversion'
             'tailscale: Taildrop sharing'
@@ -105,8 +106,11 @@ package() {
   # Commons and Ui are Omarchy's own, reached as qs.Commons: the checkout links them and so does the
   # package. Both directories get the pair, because that import resolves against the config root and
   # ui/boot is the config root the entries are launched from.
-  ln -s /usr/share/omarchy/shell/Commons "$pkgdir/usr/share/flea/ui/Commons"
-  ln -s /usr/share/omarchy/shell/Ui "$pkgdir/usr/share/flea/ui/Ui"
-  ln -s /usr/share/omarchy/shell/Commons "$pkgdir/usr/share/flea/ui/boot/Commons"
-  ln -s /usr/share/omarchy/shell/Ui "$pkgdir/usr/share/flea/ui/boot/Ui"
+  # Flea's own token layer and widget kit, reached as qs.Commons and qs.Ui. The config root
+  # gets a relative link to the same directory, so both paths resolve to one real file and
+  # one copy of each singleton; a theme the desktop shell installed is still read.
+  install -Dm644 ui/Commons/qmldir ui/Commons/*.qml ui/Commons/*.js -t "$pkgdir/usr/share/flea/ui/Commons"
+  install -Dm644 ui/Ui/qmldir ui/Ui/*.qml -t "$pkgdir/usr/share/flea/ui/Ui"
+  ln -s ../Commons "$pkgdir/usr/share/flea/ui/boot/Commons"
+  ln -s ../Ui "$pkgdir/usr/share/flea/ui/boot/Ui"
 }

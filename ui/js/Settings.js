@@ -11,8 +11,8 @@
 var WORDS = {
     sheetTip: "Press %1 for the keyboard sheet.",
     loadTip: "%1 loads the current selection.",
-    textKeys: "%1 and %2 step through them; %3 follows Omarchy again.",
-    nearestStop: "Omarchy's own size. The ruler marks %1, the nearest stop."
+    textKeys: "%1 and %2 step through them; %3 follows the theme again.",
+    nearestStop: "The theme's own size. The ruler marks %1, the nearest stop."
 }
 
 // Sections follow the current Desktop boards; their state uses the shared ui.json updater.
@@ -188,7 +188,7 @@ function rows(section, state) {
 // The sentence beside Effective has a job only while the ruler cannot state the running size: in Follow the two differ whenever Omarchy's size is not one of the seven, and an override is always a stop.
 function effectiveNote(follows, baseSize) {
     var nearest = TextSize.nearest(baseSize)
-    return !follows ? "Your override." : nearest === baseSize ? "Omarchy's own size."
+    return !follows ? "Your override." : nearest === baseSize ? "The theme's own size."
         : Format.fill(WORDS.nearestStop, nearest)
 }
 
@@ -198,8 +198,8 @@ function displayRows(state) {
     var out = [
         { kind: "group", label: "Text size" },
         { kind: "choice", id: "textMode", label: "Text size", glyph: "type",
-          labels: ["Follow Omarchy", "Override"],
-          value: follows ? "Follow Omarchy" : "Override" },
+          labels: ["Follow the theme", "Override"],
+          value: follows ? "Follow the theme" : "Override" },
         // The board's seven-stop ruler, the override's own control, now carrying the numbers it stands for; a size Omarchy invented that is not a stop marks the nearest one.
         { kind: "ruler", id: "textStop", stops: TextSize.STOPS, on: !follows,
           index: TextSize.STOPS.indexOf(TextSize.nearest(state.baseSize)) }

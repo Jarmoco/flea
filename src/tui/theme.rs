@@ -16,9 +16,14 @@ pub struct Theme {
 }
 impl Theme {
     pub fn load() -> Self {
-        let path = std::env::var("HOME").unwrap_or_default()
-            + "/.local/state/omarchy/current/theme/colors.toml";
-        Self::from_text(&std::fs::read_to_string(path).unwrap_or_default())
+        // The same theme the window draws with, resolved once and named in the environment.
+        let home = std::env::var("HOME").unwrap_or_default();
+        let home = std::path::Path::new(&home);
+        let state_home = crate::themedir::state_home(home);
+        let text = crate::themedir::resolve(home, &state_home)
+            .map(|theme| std::fs::read_to_string(theme.dir.join("colors.toml")).unwrap_or_default())
+            .unwrap_or_default();
+        Self::from_text(&text)
     }
     pub(super) fn from_text(text: &str) -> Self {
         let values = parse(text);

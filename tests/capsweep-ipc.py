@@ -15,7 +15,7 @@ runtime = scratch / "runtime"
 config.mkdir()
 runtime.mkdir(mode=0o700)
 (config / "shell.qml").symlink_to(repo / "tests/capsweep-ipc.qml")
-(config / "Commons").symlink_to("/usr/share/omarchy/shell/Commons")
+(config / "Commons").symlink_to(repo / "ui/Commons")
 fixture = scratch / "large-readable.txt"
 payload = "".join(f"Log row {index:05}: selected text loads only when requested.\n" for index in range(8000))
 fixture.write_text(payload, encoding="utf-8")

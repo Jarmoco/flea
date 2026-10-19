@@ -7,16 +7,16 @@ _pkgname=flea
 # The release workflow writes the tag's own pkgver() value here, and pushes only when the rest of this file changed.
 pkgver=0.3.12.r0.g08157d7
 pkgrel=1
-pkgdesc='Fast, keyboard-first file manager for Omarchy (git version)'
+pkgdesc='Fast, keyboard-first file manager (git version)'
 arch=('x86_64' 'aarch64')
 url='https://github.com/thisisgm/flea'
 license=('MIT' 'Apache-2.0' 'EPL-2.0' 'BSD-2-Clause')
-depends=('bat' 'bubblewrap' 'expect' 'gcc-libs' 'glib2' 'glibc' 'gvfs' 'gvfs-afc' 'gvfs-dnssd' 'gvfs-gphoto2' 'gvfs-mtp' 'gvfs-nfs' 'gvfs-smb' 'hicolor-icon-theme' 'jq' 'kimageformats' 'libheif' 'omarchy' 'python' 'python-gobject' 'qt6-multimedia' 'qt6-webengine' 'quickjs-ng' 'quickshell' 'shared-mime-info' 'udisks2' 'usbmuxd' 'util-linux' 'wl-clipboard' 'xdg-terminal-exec' 'xdg-utils')
+depends=('bat' 'bubblewrap' 'expect' 'gcc-libs' 'glib2' 'glibc' 'gvfs' 'gvfs-afc' 'gvfs-dnssd' 'gvfs-gphoto2' 'gvfs-mtp' 'gvfs-nfs' 'gvfs-smb' 'hicolor-icon-theme' 'jq' 'kimageformats' 'libheif' 'python' 'python-gobject' 'qt6-multimedia' 'qt6-webengine' 'quickjs-ng' 'quickshell' 'shared-mime-info' 'udisks2' 'usbmuxd' 'util-linux' 'wl-clipboard' 'xdg-terminal-exec' 'xdg-utils')
 makedepends=('cargo' 'git')
 provides=("$_pkgname")
 # flea-bin provides flea, so this one conflict keeps all three packages mutually exclusive.
 conflicts=("$_pkgname")
-optdepends=('libarchive: archive listing and extraction'
+optdepends=('libarchive: archive listing and extraction' 'omarchy: the desktop shell theme, its window rules and its updater'
             '7zip: 7z archive support'
             'imagemagick: image conversion'
             'tailscale: Taildrop sharing'
@@ -74,8 +74,11 @@ package() {
   install -Dm644 shelf/manifest.json shelf/README.md shelf/*.qml shelf/*.js -t "$pkgdir/usr/share/flea/shelf"
   sed -i "s/^  \"version\": \"[^\"]*\",\$/  \"version\": \"$pkgver-$pkgrel\",/" "$pkgdir/usr/share/flea/shelf/manifest.json"
   grep -qF "  \"version\": \"$pkgver-$pkgrel\"," "$pkgdir/usr/share/flea/shelf/manifest.json" || { echo "$pkgname: /usr/share/flea/shelf/manifest.json does not carry the version $pkgver-$pkgrel" >&2; return 1; }
-  ln -s /usr/share/omarchy/shell/Commons "$pkgdir/usr/share/flea/ui/Commons"
-  ln -s /usr/share/omarchy/shell/Ui "$pkgdir/usr/share/flea/ui/Ui"
-  ln -s /usr/share/omarchy/shell/Commons "$pkgdir/usr/share/flea/ui/boot/Commons"
-  ln -s /usr/share/omarchy/shell/Ui "$pkgdir/usr/share/flea/ui/boot/Ui"
+  # Flea's own token layer and widget kit, reached as qs.Commons and qs.Ui. The config root
+  # gets a relative link to the same directory, so both paths resolve to one real file and
+  # one copy of each singleton; a theme the desktop shell installed is still read.
+  install -Dm644 ui/Commons/qmldir ui/Commons/*.qml ui/Commons/*.js -t "$pkgdir/usr/share/flea/ui/Commons"
+  install -Dm644 ui/Ui/qmldir ui/Ui/*.qml -t "$pkgdir/usr/share/flea/ui/Ui"
+  ln -s ../Commons "$pkgdir/usr/share/flea/ui/boot/Commons"
+  ln -s ../Ui "$pkgdir/usr/share/flea/ui/boot/Ui"
 }

@@ -192,7 +192,9 @@ pub(crate) fn qs_command(target: PathBuf) -> Command {
     cmd.env_remove(crate::gvfsprefetch::START_ENV);
     // A shell started under an --unlock window must not replay its dialog; unlock_command sets it back for the one launch.
     cmd.env_remove(crate::unlock::ENV);
-    skip_gtk_platform_theme(&mut cmd);
+    let theme = crate::themedir::current();
+    crate::themedir::apply(&mut cmd);
+    skip_gtk_platform_theme(&mut cmd, theme.as_ref());
     // An explicit choice is the operator's; map_or because is_none_or needs Rust 1.82 over the 1.77 floor.
     if std::env::var_os("FLEA_BIN").map_or(true, |value| value.is_empty()) {
         if let Ok(binary) = std::env::current_exe() {
@@ -265,7 +267,7 @@ const GTK3: &str = "gtk3";
 pub const THEME_MARKER: &str = "FLEA_QT_THEME";
 
 // gtk3 as Qt's platform theme starts GTK inside the shell for one string, the icon theme name.
-fn skip_gtk_platform_theme(cmd: &mut Command) {
+fn skip_gtk_platform_theme(cmd: &mut Command, theme: Option<&crate::themedir::Theme>) {
     // Empty is absent, the rule paths::has_display() applies: a wrapper's unset variable is not a choice.
     if std::env::var_os("QS_ICON_THEME").is_some_and(|value| !value.is_empty()) {
         return;
@@ -274,14 +276,9 @@ fn skip_gtk_platform_theme(cmd: &mut Command) {
     if std::env::var_os("QT_QPA_PLATFORMTHEME").as_deref() != Some(OsStr::new(GTK3)) {
         return;
     }
-    let Some(home) = std::env::var_os("HOME") else { return };
-    let path = PathBuf::from(home).join(".local/state/omarchy/current/theme/icons.theme");
-    // Sample input, the whole file: "Yaru-purple\n"
-    let Ok(text) = std::fs::read_to_string(path) else { return };
-    let name = text.trim();
-    if name.is_empty() {
-        return;
-    }
+    // The theme names the icon theme, and a box with no theme keeps the platform
+    // theme it was given, which is what draws its icons.
+    let Some(name) = crate::themedir::icon_theme(theme) else { return };
     cmd.env("QS_ICON_THEME", name);
     cmd.env_remove("QT_QPA_PLATFORMTHEME");
     cmd.env(THEME_MARKER, GTK3);

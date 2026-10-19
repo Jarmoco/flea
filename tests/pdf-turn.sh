@@ -50,7 +50,7 @@ mkdir -p "$turn_work"/{config,home,runtime,tmp} || exit 1
 chmod 700 "$turn_work/runtime" || exit 1
 ln -s "$PWD/tests/pdf-turn.qml" "$turn_work/config/shell.qml" || exit 1
 headless_commons "$turn_work" || exit 1
-ln -s /usr/share/omarchy/shell/Ui "$turn_work/config/Ui" || exit 1
+ln -s "$(readlink -f ui/boot/Ui)" "$turn_work/config/Ui" || exit 1
 
 # Four light pages whose top 15, 30, 45 and 60 percent is black, so the share of black pixels in a
 # frame says which page is drawn; the fifth is a 54-megapixel JPEG that renders past the cap.

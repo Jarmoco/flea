@@ -27,7 +27,7 @@ def direct_sources(root):
             # Sample input: ln -s "$(readlink -f ui/boot/Commons/)" "$root/config/Commons" also links the live OEM source.
             if (not line.lstrip().startswith('#') and not native_capture_source(path, line)
                     and any(re.search(r'(?<![\w$])' + re.escape(source) + r'(?!\w)', line) for source in sources)):
-                bad.append(f'{path}:{n}: use headless_commons instead of a direct OEM Commons source')
+                bad.append(f'{path}:{n}: use headless_commons instead of a direct Commons source')
     return bad
 
 

@@ -33,7 +33,7 @@ function follow() {
     return { mode: FOLLOW }
 }
 
-// Follow Omarchy is the default, and the board names its stored shape: {"mode":"system"}. An
+// Following the theme is the default, and the board names its stored shape: {"mode":"system"}. An
 // override is the same key holding a number instead, which is src/uischema.rs's own display.textSize
 // rule: "system", or one stop the OEM panel could have produced. There is no second stored shape.
 function following(stored) {

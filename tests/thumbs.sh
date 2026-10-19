@@ -374,7 +374,7 @@ ln -s "$PWD/tests/thumbs-qlprefetch.qml" "$prefetch_root/config/shell.qml" || { 
 # The probe plans with production Thumbs and ExtThumbs, so it reads ui/ as flea.
 ln -s "$PWD/ui" "$prefetch_root/config/flea" || { sandbox_remove "$D"; exit 1; }
 headless_commons "$prefetch_root" || { sandbox_remove "$D"; exit 1; }
-ln -s /usr/share/omarchy/shell/Ui "$prefetch_root/config/Ui" || { sandbox_remove "$D"; exit 1; }
+ln -s "$(readlink -f ui/boot/Ui)" "$prefetch_root/config/Ui" || { sandbox_remove "$D"; exit 1; }
 ( env -u DISPLAY -u WAYLAND_DISPLAY -u HYPRLAND_INSTANCE_SIGNATURE \
     HOME="$D" XDG_RUNTIME_DIR="$prefetch_root/runtime" TMPDIR="$D" \
     XDG_CONFIG_HOME="$D/.config" XDG_STATE_HOME="$D/.local/state" XDG_CACHE_HOME="$D/cache" \

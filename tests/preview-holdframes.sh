@@ -37,7 +37,7 @@ mkdir -p "$hf_work"/{config,home,runtime,tmp} "$hf_work"/out-{threaded,basic} ||
 chmod 700 "$hf_work/runtime" || exit 1
 ln -s "$PWD/tests/preview-holdframes.qml" "$hf_work/config/shell.qml" || exit 1
 headless_commons "$hf_work" || exit 1
-ln -s /usr/share/omarchy/shell/Ui "$hf_work/config/Ui" || exit 1
+ln -s "$(readlink -f ui/boot/Ui)" "$hf_work/config/Ui" || exit 1
 
 ui=${PREVIEW_HOLDFRAMES_UI:-$PWD/ui}
 # Zero idle time starts a queued repaint at once, as vsync does; the subshell hides the harness kill's notice.
