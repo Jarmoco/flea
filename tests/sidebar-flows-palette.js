@@ -1,10 +1,13 @@
 // Sample input: the four colors.toml roles of stock tokyo-night, whose selected and normal fills differ.
 var COLOURED_THEME = 'accent = "#7aa2f7"\nmuted = "#414868"\nbackground = "#1a1b26"\nforeground = "#a9b1d6"\n'
 
+// The accent is a derived role: the palette's own accent and the operator's own
+// override over it, and the one the window draws is whichever of the two is
+// there. A snapshot restores the two sources, because the drawn one is read.
 function snapshot(theme, color) {
     var colors = {}
-    for (var role of ["foreground", "background", "accent", "urgent", "muted"]) colors[role] = String(color[role])
-    return { palette: theme.palette, colors: colors }
+    for (var role of ["themeForeground", "themeBackground", "themeAccent", "themeUrgent", "themeMuted"]) colors[role] = String(color[role])
+    return { palette: theme.palette, colors: colors, overrides: color.overrides }
 }
 
 // Color.loadColors keeps missing roles, so even an empty starting palette needs its effective OEM colors restored.
@@ -15,8 +18,9 @@ function withPalette(theme, color, body, run) {
         return run()
     } finally {
         for (var role in before.colors) color[role] = before.colors[role]
+        color.overrides = before.overrides
         theme.applyColors(Object.keys(before.palette).map(function (key) { return key + ' = "' + before.palette[key] + '"' }).join("\n"))
-        color.muted = before.colors.muted
+        color.themeMuted = before.colors.themeMuted
     }
 }
 

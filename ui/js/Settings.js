@@ -6,6 +6,7 @@
 .import "KeyName.js" as KeyName
 .import "SettingsShelf.js" as Shelf
 .import "SettingsAbout.js" as About
+.import "SettingsTheme.js" as Theme
 
 // Whole sentences with "%1" for a value, filled by fill so each translates as one.
 var WORDS = {
@@ -23,6 +24,7 @@ var SECTIONS = [
     { id: "preview", label: "Preview", glyph: "preview" },
     { id: "keys", label: "Keys", glyph: "keyboard" },
     { id: "display", label: "Display", glyph: "maximize" },
+    { id: "theme", label: "Theme", glyph: "contrast" },
     { id: "menus", label: "Menus", glyph: "list" },
     { id: "about", label: "About", glyph: "info" }
 ]
@@ -161,7 +163,9 @@ function focusable(row) {
         return row.master === true || row.action !== undefined
     if (row.kind === "ruler")
         return row.on === true
+    // A colour row is a control: it opens its own editor, where a hex is typed.
     return row.kind === "check" || row.kind === "choice" || row.kind === "action" || row.kind === "favourite"
+        || row.kind === "color"
 }
 
 // state: { textSize, hidden, keyHints, preset, baseSize, monitorScale, cornerRadius, presetKeys }
@@ -180,6 +184,8 @@ function rows(section, state) {
         return About.rows(state)
     if (section === "display")
         return displayRows(state)
+    if (section === "theme")
+        return Theme.rows(state)
     if (section === "menus")
         return menuRows(state.hidden, state.keyHints)
     return keyRows(state)

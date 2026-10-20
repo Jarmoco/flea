@@ -13,7 +13,7 @@ extern "C" {
 }
 
 // exec rather than spawn, so the shell replaces this process and no pid is orphaned.
-pub fn exec_qs(ui: &Path, start: Option<&str>, select: Option<&str>) -> i32 {
+pub fn exec_qs(ui: &Path, start: Option<&str>, select: Option<&str>, theme_name: &str) -> i32 {
     // Quickshell keeps dead entries forever, so Flea prunes only its own shells before qs starts.
     crate::qsregistry::prune_dead(&[crate::paths::SHELL_ID, crate::paths::PICKER_SHELL_ID]);
     // One helper fork for the launch: the page-cache list and the gvfs head start together.
@@ -25,7 +25,7 @@ pub fn exec_qs(ui: &Path, start: Option<&str>, select: Option<&str>) -> i32 {
     };
     let warmed = warm_all(list.as_deref(), gvfs_arg);
     let gvfs: Option<(PathBuf, u64)> = prepared.filter(|_| warmed);
-    let mut cmd = qs_command(ui.join(paths::ENTRY));
+    let mut cmd = qs_command(ui.join(paths::ENTRY), theme_name);
     if let Some(list) = &list {
         cmd.env(prefetch::LIST_ENV, list);
         // exec keeps this pid, so it is the shell's own.
@@ -134,7 +134,7 @@ pub fn pick(reply: &str) -> i32 {
     };
     // Quickshell keeps dead entries forever, so Flea prunes only its own shells before qs starts.
     crate::qsregistry::prune_dead(&[crate::paths::SHELL_ID, crate::paths::PICKER_SHELL_ID]);
-    let mut cmd = qs_command(ui.join(paths::PICKER_ENTRY));
+    let mut cmd = qs_command(ui.join(paths::PICKER_ENTRY), &crate::themedir::stored_name());
     cmd.env("FLEA_PICKER_REPLY", reply);
     exec(cmd)
 }
@@ -180,7 +180,7 @@ fn apply_renderer(cmd: &mut Command, renderer: LaunchRenderer) {
 }
 
 // The qs invocation both entry points share, including the renderer chosen at the last hand-off point.
-pub(crate) fn qs_command(target: PathBuf) -> Command {
+pub(crate) fn qs_command(target: PathBuf, theme_name: &str) -> Command {
     let mut cmd = Command::new("qs");
     cmd.arg("-p").arg(target);
     // Only the main window records a prefetch list; a chooser started from a Flea terminal must not overwrite it.
@@ -193,7 +193,7 @@ pub(crate) fn qs_command(target: PathBuf) -> Command {
     // A shell started under an --unlock window must not replay its dialog; unlock_command sets it back for the one launch.
     cmd.env_remove(crate::unlock::ENV);
     let theme = crate::themedir::current();
-    crate::themedir::apply(&mut cmd);
+    crate::themedir::apply(&mut cmd, theme_name);
     skip_gtk_platform_theme(&mut cmd, theme.as_ref());
     // An explicit choice is the operator's; map_or because is_none_or needs Rust 1.82 over the 1.77 floor.
     if std::env::var_os("FLEA_BIN").map_or(true, |value| value.is_empty()) {

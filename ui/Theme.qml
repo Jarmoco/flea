@@ -28,6 +28,13 @@ Singleton {
     property var palette: ({})
     // True only once colors.toml parsed to a palette, so a test can tell one from a fallback.
     property bool ready: false
+    // The colours.toml body the palette was read from, so the operator's own colours can be
+    // laid over it again without reading the file a second time.
+    property string colorsBody: ""
+    // The operator's own colours, which the palette reader owns. A change of them lays the
+    // palette over again, so the window redraws in the new colours at once.
+    property var overrides: Commons.Color.overrides
+    onOverridesChanged: root.applyColors(root.colorsBody)
 
     // The size Flea draws at: Omarchy's own unless the Display section pinned an override stop.
     readonly property int baseSize: TextSize.effective(ViewState.textSize, Style.font.baseSize)
@@ -329,37 +336,46 @@ Singleton {
 
     // Color owns the other five; only the three it does not model are assigned here.
     function applyColors(body) {
+        root.colorsBody = String(body || "")
         var found = Palette.parse(body);
-        var bg = Palette.pick(found, ["background"], root.fallbackColor.background);
-        var surface = Palette.pick(found, Palette.SURFACE_KEYS, root.fallbackColor.surface);
-        root.color.surface = surface;
         Commons.Color.loadColors(body);
+        // The grounds the app draws with: the theme's own, or the operator's own over them. The
+        // roles Flea derives from others follow the operator's own where they set one, so the
+        // ground and the ink never disagree.
+        var bg = root.ownColor("background", Palette.pick(found, ["background"], root.fallbackColor.background));
+        var surface = root.ownColor("surface", Palette.pick(found, Palette.SURFACE_KEYS, root.fallbackColor.surface));
+        root.color.surface = surface;
         // Frames and glyphs draw the palette's muted lifted to frameContrast; text lifts that to textContrast on the background, then the surface.
-        root.color.opaqueMutedFrame = Contrast.ensureRatio(
-            Palette.pick(found, ["muted"], Qt.darker(Commons.Color.foreground, 1.4)), bg, root.frameContrast);
-        root.color.opaqueMuted = Contrast.ensureRatio(Contrast.ensureRatio(root.color.opaqueMutedFrame, bg, root.textContrast), surface, root.textContrast);
+        var mutedSource = root.ownColor("muted", Palette.pick(found, ["muted"], Qt.darker(Commons.Color.foreground, 1.4)));
+        root.color.opaqueMutedFrame = root.ownColor("mutedFrame", Contrast.ensureRatio(mutedSource, bg, root.frameContrast));
+        root.color.opaqueMuted = root.ownColor("muted", Contrast.ensureRatio(Contrast.ensureRatio(root.color.opaqueMutedFrame, bg, root.textContrast), surface, root.textContrast));
         // Metadata ink is the foreground darkened one step, lifted the same two ways; the unlifted step stays for glyphs that read it.
-        root.color.opaqueMetadataFrame = Qt.darker(Commons.Color.foreground, 1.4);
-        root.color.opaqueMetadata = Contrast.ensureRatio(Contrast.ensureRatio(root.color.opaqueMetadataFrame, bg, root.textContrast), surface, root.textContrast);
+        root.color.opaqueMetadataFrame = root.ownColor("metadataFrame", Qt.darker(Commons.Color.foreground, 1.4));
+        root.color.opaqueMetadata = root.ownColor("metadata", Contrast.ensureRatio(Contrast.ensureRatio(root.color.opaqueMetadataFrame, bg, root.textContrast), surface, root.textContrast));
         // Headings take the palette's bright foreground (the ANSI ring's color15 without one) when it has more contrast than the foreground.
         var bright = Palette.pick(found, ["bright_foreground", "color15"], String(Commons.Color.foreground));
-        root.color.opaqueForegroundBright = Contrast.ratio(bright, bg) > Contrast.ratio(String(Commons.Color.foreground), bg) ? bright : Commons.Color.foreground;
-        root.color.opaqueAccentFrame = Contrast.ensureRatio(Commons.Color.accent, surface, 3);
+        root.color.opaqueForegroundBright = root.ownColor("foregroundBright", Contrast.ratio(bright, bg) > Contrast.ratio(String(Commons.Color.foreground), bg) ? bright : Commons.Color.foreground);
         root.color.accentHasHue = Commons.Color.accent.hsvSaturation > root.hueFloor;
-        root.color.opaqueSymlink = Contrast.ensureRatio(
-            Palette.pick(found, ["cyan", "color6"], root.fallbackColor.symlink), bg, 4.5);
-        root.color.opaqueExecutable = Contrast.ensureRatio(
-            Palette.pick(found, ["green", "color2"], root.fallbackColor.executable), bg, 4.5);
+        root.color.opaqueSymlink = root.ownColor("symlink", Contrast.ensureRatio(
+            Palette.pick(found, ["cyan", "color6"], root.fallbackColor.symlink), bg, 4.5));
+        root.color.opaqueExecutable = root.ownColor("executable", Contrast.ensureRatio(
+            Palette.pick(found, ["green", "color2"], root.fallbackColor.executable), bg, 4.5));
         root.palette = found;
         // Urgent is the palette's own red: seven of the 23 installed themes leave it under 4.5:1 on their own ground, so it is lifted the way symlink and executable are, and the three whose red carries no chroma at all (solitude, white, vantablack) fall back to the foreground, because a destructive row drawn in the same grey as an unavailable one reads as switched off rather than as dangerous.
         var hued = Commons.Color.urgent.hsvSaturation > root.hueFloor;
-        root.color.opaqueError = hued ? Contrast.ensureRatio(Commons.Color.urgent, bg, Math.max(4.5, Contrast.ratio(String(root.color.opaqueMuted), bg))) : String(Commons.Color.foreground);
+        root.color.opaqueError = root.ownColor("error", hued ? Contrast.ensureRatio(Commons.Color.urgent, bg, Math.max(4.5, Contrast.ratio(String(root.color.opaqueMuted), bg))) : String(Commons.Color.foreground));
         // The status bar draws that same ink on the surface, where four themes land under 4.5; it is never quieter than the caption there.
-        root.color.opaqueErrorOnSurface = hued ? Contrast.ensureRatio(Commons.Color.urgent, surface, Math.max(4.5, Contrast.ratio(String(root.color.opaqueMuted), surface))) : String(Commons.Color.foreground);
+        root.color.opaqueErrorOnSurface = root.ownColor("errorOnSurface", hued ? Contrast.ensureRatio(Commons.Color.urgent, surface, Math.max(4.5, Contrast.ratio(String(root.color.opaqueMuted), surface))) : String(Commons.Color.foreground));
         root.tag = Contrast.tagTheme(found, bg, surface);
         // A body that parsed to nothing left every role on its fallback, so the flag says so rather
         // than reporting that the read happened: text() returns "" for a file that is not there.
         root.ready = Palette.isPalette(found);
+    }
+
+    // The operator's own colour for a role, or the theme's own value for it. A role the operator
+    // did not set keeps the theme's own, which is every role until they set one.
+    function ownColor(role, derived) {
+        return Commons.Color.overridden(role) ? Commons.Color.overrides[role] : derived;
     }
 
     // Sample input: [{"id":0,"name":"DP-1","width":2560,"height":1440,"scale":1.00,"focused":true}]
@@ -380,12 +396,17 @@ Singleton {
         root.reducedMotion = String(body).indexOf('"bool": false') >= 0;
     }
 
+    // A theme directory of "" is the palette of Flea's own: there is no theme
+    // file to read, so the roles go back to the defaults rather than holding
+    // the last theme's colours.
+    onThemeDirChanged: if (root.themeDir === "") root.applyColors("")
+
     // blockLoading only gates calls to text()/data(), so a window could paint one frame against the
     // un-loaded fallback; Component.onCompleted calls text() itself, which blocks this Singleton's
     // construction before any window, and the later onLoaded is a harmless idempotent second apply.
     FileView {
         id: colorsFile
-        path: root.themeDir + "/colors.toml"
+        path: root.themeDir === "" ? "" : root.themeDir + "/colors.toml"
         blockLoading: true
         printErrors: false
         onLoaded: root.applyColors(text())

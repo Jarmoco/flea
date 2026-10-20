@@ -1,9 +1,11 @@
 import QtQuick
 import Quickshell
 import qs.Commons
+import qs.Commons as Commons
 import "." as Flea
 import "js/Keymap.js" as Keymap
 import "js/Settings.js" as Settings
+import "js/SettingsTheme.js" as SettingsTheme
 
 // The settings panel the Settings board draws: one floating surface, a fixed rail of sections and a pane that scrolls inside the work-area clamp. A plain overlay and not a QQC Popup, the call ui/ContextMenu.qml already made, because the one Controls import cost 10 ms of warm startup.
 Item {
@@ -52,9 +54,20 @@ Item {
         baseSize: Theme.baseSize,
         monitorScale: Theme.monitorScale,
         cornerRadius: Style.cornerRadius,
-        presetKeys: Keymap.PRESET_KEYS
+        presetKeys: Keymap.PRESET_KEYS,
+        // The Theme section's own: the themes this box has and the choice among them.
+        themes: root.themePicker.themes,
+        themeName: ViewState.themeName,
+        // The operator's own colours, one hex per role the app draws with.
+        themeColors: ViewState.themeColors,
+        // The directory the palette is reading, which is the truth about where
+        // the theme in use lives.
+        themeDir: Commons.Color.themeDir
     })
     readonly property var rows: Settings.rows(root.section, root.settingsState)
+
+    // The open submenu, for a test that reads it without walking children.
+    readonly property var menuRef: choiceMenu
 
     // What a test reads instead of running OCR over the panel, the same idiom ui/KeymapSheet.qml's
     // rows() uses: one row per line, its kind, its wording and whatever value it currently holds.
@@ -66,6 +79,10 @@ Item {
         }
         return out.join("\n")
     }
+
+    // The themes this box has, and the one it draws with. It is built with the panel,
+    // so a window that never opens Settings carries none of it.
+    property Item themePicker: Flea.ThemePicker { }
 
     function open(holder) {
         root.focusHolder = holder
@@ -113,6 +130,11 @@ Item {
             return
         }
         if (row.id === "columns") { root.showSection("columns"); return }
+        // A colour row opens its own editor, where a hex is typed, and the panel's keyboard
+        // goes with it until the editor closes.
+        if (row.kind === "color") { root.beginEdit(index); return }
+        // Every colour back to the theme's own, which is the one row that clears the map.
+        if (row.id === "theme.colors.reset") { ViewState.clearThemeColors(); return }
         // The folder the panel was opened over, which is the pane behind it: the same folder Places' own "Add this folder" takes, and the only one on screen to mean.
         if (row.id === "startFolder") {
             if (root.focusHolder) ViewState.setStartFolder(root.focusHolder.path)
@@ -140,8 +162,48 @@ Item {
             ViewState.toggleKeyHints()
         else if (row.kind === "check")
             ViewState.toggleMenuAction(row.id)
+        else if (row.menu === true && row.values !== undefined)
+            root.openMenu(index)
         else
             root.stepRowValue(index, 1)
+    }
+
+    // The writer every path a choice can take shares, so a click, an Enter and an h/l step all
+    // land the same setting, and a theme is drawn at once whichever one the operator used.
+    function setChoice(row, value, index) {
+        // A colour row writes the operator's own colour for its role, and the menu's own custom
+        // entry opens the row's editor rather than storing a colour.
+        if (row.colorRole !== undefined) {
+            if (value === SettingsTheme.CUSTOM) {
+                root.beginEdit(index)
+                return
+            }
+            ViewState.setThemeColor(row.colorRole, value)
+            return
+        }
+        ViewState.changeSetting(row.id, value)
+        if (row.id === "theme.name")
+            root.themePicker.apply(value)
+    }
+
+    // The colour row's own editor, which takes the keyboard while it is open and gives it back
+    // when it closes.
+    function beginEdit(index) {
+        var item = pane.rowItem(index)
+        if (item)
+            item.beginEdit()
+    }
+
+    // A choice row's submenu: all of its options in a card under the row, so a long list reads as
+    // a menu rather than a cycle. The row's own geometry places it, and the panel's window clamps it.
+    function openMenu(index) {
+        var row = root.rows[index]
+        if (!row || row.values === undefined)
+            return
+        var item = pane.rowItem(index)
+        var at = pane.mapToItem(root, item ? item.x : 0, item ? item.y + item.height : 0)
+        choiceMenu.open(row.labels, row.value, at.x, at.y, item ? item.width : root.width,
+                      Math.max(Theme.rowHeight * 2, root.height - at.y - root.clampMargin), row.swatches)
     }
 
     // h, l and the two chevrons. Every writer is ui/ViewState.qml's own, which is the same state the
@@ -162,9 +224,15 @@ Item {
         if (row.kind !== "choice")
             return
         if (row.values !== undefined) {
+            // A colour row's step walks the colours it can pick, and never the menu's own
+            // custom entry, which is the editor and not a colour.
+            if (row.colorRole !== undefined) {
+                root.setChoice(row, SettingsTheme.stepValue(row.values, row.selected, direction), index)
+                return
+            }
             var index = row.values.indexOf(row.selected)
             var target = (index + direction + row.values.length) % row.values.length
-            ViewState.changeSetting(row.id, row.values[target])
+            root.setChoice(row, row.values[target], index)
             return
         }
         var at = Settings.PRESETS.indexOf(ViewState.keysPreset)
@@ -220,7 +288,7 @@ Item {
             return
         }
         if (row.values !== undefined) {
-            ViewState.changeSetting(row.id, row.values[stop])
+            root.setChoice(row, row.values[stop], index)
             return
         }
         if (row.kind === "choice") {
@@ -445,8 +513,25 @@ Item {
                 onActivated: function (index) { root.side = "pane"; root.cursor = index; root.activate(index) }
                 onStepped: function (index, direction) { root.side = "pane"; root.cursor = index; root.stepRowValue(index, direction) }
                 onStopPicked: function (index, stop) { root.side = "pane"; root.cursor = index; root.pickRowStop(index, stop) }
+                // A colour the operator typed lands in the state, and the palette is laid over
+                // again, so the window redraws in it at once.
+                onColorCommitted: function (index, role, hex) { ViewState.setThemeColor(role, hex) }
+                // The editor gave the keyboard back, so the panel takes it.
+                onColorEditing: function (index, editing) { if (!editing) keys.forceActiveFocus() }
             }
         }
+    }
+
+    // A choice row's submenu, built only while one is open. It sits above the card, so a press on
+    // the panel outside it closes the menu rather than the panel.
+    Flea.SettingsMenu {
+        id: choiceMenu
+        onChosen: function (index) {
+            var row = root.rows[root.cursor]
+            if (row && row.values !== undefined)
+                root.setChoice(row, row.values[index], root.cursor)
+        }
+        onClosed: root.showCursor()
     }
 
     Connections {
@@ -493,6 +578,26 @@ Item {
 
         Keys.onPressed: function (event) {
             event.accepted = true
+            // An open submenu takes the keys the panel would otherwise answer, so its own rows move.
+            if (choiceMenu.opened) {
+                if (event.key === Qt.Key_Escape) {
+                    choiceMenu.close()
+                    return
+                }
+                if (event.key === Qt.Key_Down || event.text === "j") {
+                    choiceMenu.move(1)
+                    return
+                }
+                if (event.key === Qt.Key_Up || event.text === "k") {
+                    choiceMenu.move(-1)
+                    return
+                }
+                if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+                    choiceMenu.take()
+                    return
+                }
+                return
+            }
             if (event.key === Qt.Key_Escape) {
                 root.close()
                 return

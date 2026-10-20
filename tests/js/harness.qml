@@ -138,6 +138,7 @@ import "settings.js" as SettingsSuite
 import "settingsmenus.js" as SettingsMenusSuite
 import "settingsshelf.js" as SettingsShelfSuite
 import "settingsabout.js" as SettingsAboutSuite
+import "settingstheme.js" as SettingsThemeSuite
 import "ownpalette.js" as OwnPaletteSuite
 import "themes.js" as ThemesSuite
 import "transfer.js" as TransferSuite
@@ -218,7 +219,7 @@ Item {
             ["reclick", ReclickSuite],
             ["renderer", RendererSuite], ["rowcells", RowCellsSuite], ["runfile", RunFileSuite],
             ["scroll", ScrollSuite], ["scrollanchor", ScrollAnchorSuite], ["scrolloff", ScrollOffSuite], ["menuscroll", MenuScrollSuite], ["search", SearchSuite], ["searchnoblank", SearchNoBlankSuite],
-            ["selection", SelectionSuite], ["shiftranges", ShiftRangesSuite], ["sheetquery", SheetQuerySuite], ["sheetcandidates", SheetCandidatesSuite], ["reload", ReloadSuite], ["slowclick", SlowClickSuite], ["slowop", SlowOpSuite], ["slowsource", SlowSourceSuite], ["settings", SettingsSuite], ["settingsmenus", SettingsMenusSuite], ["settingsshelf", SettingsShelfSuite], ["settingsabout", SettingsAboutSuite],
+            ["selection", SelectionSuite], ["shiftranges", ShiftRangesSuite], ["sheetquery", SheetQuerySuite], ["sheetcandidates", SheetCandidatesSuite], ["reload", ReloadSuite], ["slowclick", SlowClickSuite], ["slowop", SlowOpSuite], ["slowsource", SlowSourceSuite], ["settings", SettingsSuite], ["settingsmenus", SettingsMenusSuite], ["settingsshelf", SettingsShelfSuite], ["settingsabout", SettingsAboutSuite], ["settingstheme", SettingsThemeSuite],
             ["sort", SortSuite], ["swap", SwapSuite], ["startup", StartupSuite], ["trashdates", TrashDatesSuite], ["permissions", PermissionsSuite], ["status", StatusSuite], ["statusfix", StatusFixSuite], ["taildrop", TaildropSuite], ["tags", TagsSuite], ["tagskeys", TagsKeysSuite], ["textsize", TextSizeSuite],
             ["trash", TrashSuite], ["trashdrop", TrashDropSuite], ["tap", TapSuite], ["marquee", MarqueeSuite], ["tabs", TabsSuite], ["tabcatcher", TabCatcherSuite], ["tabs-switch", TabsSwitchSuite], ["tabmove", TabMoveSuite], ["tabrestore", TabRestoreSuite], ["shelfmodel", ShelfModelSuite],
             ["mdgates", MdGatesSuite],

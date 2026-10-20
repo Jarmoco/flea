@@ -366,14 +366,15 @@ fn main() {
                 Ok(()) => {}
                 Err(e) => eprintln!("flea: the view state was not settled ({})", e),
             }
-            // An upgrade ships a new plugin under a switch that is already on, and the copy in the
-            // user's own plugin directory is the one the bar reads.
-            if let Ok(store) = uistore::Store::user() {
-                if let Err(e) = shelfplugin::refresh(uistatecli::shelf_enabled(&store.read())) {
-                    eprintln!("flea: the shelf plugin was not refreshed ({})", e);
-                }
+            // The settled document, read once: the shelf's own switch and the theme the
+            // operator chose both come off it, and the theme is named in the environment
+            // so the window's first paint already carries it.
+            let (settings, theme_name) = uistatecli::settled();
+            // An upgrade ships a new plugin under a switch that is already on.
+            if let Err(e) = shelfplugin::refresh(uistatecli::shelf_enabled(&settings)) {
+                eprintln!("flea: the shelf plugin was not refreshed ({})", e);
             }
-            exit(gui::exec_qs(&ui, open_path.as_deref(), select_path.as_deref()))
+            exit(gui::exec_qs(&ui, open_path.as_deref(), select_path.as_deref(), &theme_name))
         }
         None => {
             eprintln!("{}", paths::missing_ui_message());

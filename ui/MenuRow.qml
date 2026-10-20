@@ -33,6 +33,9 @@ Item {
     function awayFrom(position, x, y) { return x >= 0 && (Math.abs(position.x - x) >= 1 || Math.abs(position.y - y) >= 1) }
     signal pointerSeen(point at)
 
+    // A colour swatch in the mark slot, for a menu whose rows are colours (the Settings accent
+    // menu). Empty means the row's own glyph, which is every other menu.
+    property string swatch: ""
     readonly property bool available: root.entry.disabled !== true
     readonly property bool isSeparator: root.entry.separator === true
     // Menu.hasSubmenu and not a local test, because a local one read submenu === true and the menu sets an array.
@@ -143,8 +146,21 @@ Item {
         Flea.Glyph {
             anchors.fill: parent
             visible: root.entry.mark === undefined && !appMark.visible && root.entry.tagRow === undefined
+                && root.swatch.length === 0
             name: root.entry.glyph !== undefined ? root.entry.glyph : "file"
             color: root.markColor
+        }
+
+        // A colour swatch, drawn in place of the glyph when the row's own mark is a colour.
+        Rectangle {
+            anchors.centerIn: parent
+            width: Math.round(root.slotSize * 0.62)
+            height: width
+            radius: width / 2
+            visible: root.swatch.length > 0
+            color: root.swatch
+            border.width: Theme.spacing.hairline
+            border.color: Theme.color.mutedFrame
         }
 
         // The theme that cannot name the entry leaves the glyph above standing in its muted role.

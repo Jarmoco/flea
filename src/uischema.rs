@@ -54,11 +54,12 @@ pub const DEFAULTS: &str = r#"{
   "previewFacts": "compact",
   "keys": "default",
   "display": { "textSize": { "mode": "system" }, "hyprlandIcons": false },
+  "theme": { "name": "desktop", "colors": {} },
   "menu": { "hidden": ["delete", "openTerminal", "placeMenu", "runScript",
             "moveto", "copyto", "properties", "permissions", "copyAs", "pasteAs",
             "invertSelection", "extThumbs", "run", "openAsText"] },
   "updates": { "autoCheck": true },
-  "stateVersion": 3
+  "stateVersion": 4
 }"#;
 
 // The list row's optional columns in the order ui/js/Columns.js lays them out; name is never optional.
@@ -95,6 +96,11 @@ pub enum Rule {
     FolderSorts,
     // A folder path to one browser view, at most MAX_FOLDER_VIEWS entries; see folderViews above.
     FolderViews,
+    // A theme's own name, or the desktop shell's, or "" for no theme at all.
+    ThemeName,
+    // The operator's own colours, one hex per role the app draws with; a role the map does not
+    // name keeps the theme's own.
+    Colors,
     Group(&'static [(&'static str, Rule)]),
 }
 
@@ -170,6 +176,32 @@ pub const TEXT_SIZE: &[(&str, Rule)] = &[("mode", Rule::TextSize)];
 // rather than carrying a second writable copy of a setting Hyprland already owns.
 pub const DISPLAY: &[(&str, Rule)] = &[("textSize", Rule::Group(TEXT_SIZE)), ("hyprlandIcons", Rule::Bool)];
 
+// Settings > Theme: which theme to draw with, and the colours the operator's own over it. The name
+// is the desktop shell's own, a theme directory's name, or "" for no theme at all, which is the
+// palette of Flea's own; the colours are one hex per role, and a role the map does not name keeps
+// the theme's own colour for it.
+pub const THEME: &[(&str, Rule)] = &[("name", Rule::ThemeName), ("colors", Rule::Colors)];
+
+// The colour roles the operator can set, one per colour the app draws with: the two grounds, the
+// inks, the frames and the three marks a file kind carries. ui/js/SettingsTheme.js names the same
+// list for the panel, and src/uischema_tests.rs reads that file to hold the two together.
+pub const COLOR_ROLES: &[&str] = &[
+    "background",
+    "surface",
+    "foreground",
+    "foregroundBright",
+    "muted",
+    "mutedFrame",
+    "metadata",
+    "metadataFrame",
+    "accent",
+    "accentFrame",
+    "error",
+    "errorOnSurface",
+    "symlink",
+    "executable",
+];
+
 // hidden is the whole of the Menus section's state: the master row SettingsMenus draws over the six
 // basic actions derives from it by masterState in ui/js/Settings.js, and cannot disagree with it.
 pub const MENU: &[(&str, Rule)] = &[("hidden", Rule::Ids)];
@@ -232,6 +264,7 @@ pub const SCHEMA: &[(&str, Rule)] = &[
     // this build cannot honour falls back to default, which is also what a fresh ui.json holds.
     ("keys", Rule::Word(&["default", "vim", "mac", "windows"])),
     ("display", Rule::Group(DISPLAY)),
+    ("theme", Rule::Group(THEME)),
     ("menu", Rule::Group(MENU)),
     ("updates", Rule::Group(UPDATES)),
     // Not a setting: the stamp that makes each migration once, for the window, the TUI and the CLI alike.
@@ -290,11 +323,13 @@ mod tests {
                 "dual", "foldersFirst", "groupByKind", "hidden", "langMarks", "hiddenLast", "highlightToday", "wrapAtEnds", "escapeUp", "openMode", "clickRename", "openFoldersWhileDragging", "keyHints", "startIn", "startFolder",
                 "lastPath", "lastTabs", "newTab", "trashAutoEmpty", "trashSweptOn", "places", "shelf",
                 "preview", "previewFacts", "keys",
-                "display", "menu", "updates", "stateVersion"
+                "display", "theme", "menu", "updates", "stateVersion"
             ]
         );
-        assert_eq!(d.get(STATE_VERSION).and_then(Json::as_f64), Some(3.0), "a fresh document is already stamped");
+        assert_eq!(d.get(STATE_VERSION).and_then(Json::as_f64), Some(4.0), "a fresh document is already stamped");
         assert_eq!(d.get("view").and_then(Json::as_str), Some("list"));
+        assert_eq!(d.get("theme").and_then(|t| t.get("name")).and_then(Json::as_str), Some("desktop"));
+        assert_eq!(d.get("theme").and_then(|t| t.get("colors")).and_then(Json::as_object).map(<[(String, Json)]>::len), Some(0), "no colour is the operator's own until they set one");
         assert_eq!(d.get("pickerView").and_then(Json::as_str), Some("list"));
         assert_eq!(d.get("density").and_then(Json::as_str), Some("compact"));
         assert_eq!(d.get("addressBar").and_then(Json::as_str), Some("breadcrumb"));

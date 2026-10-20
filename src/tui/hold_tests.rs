@@ -9,7 +9,7 @@ fn paint_with(hold: &Hold, model: &Model, now: Instant, launched: Instant) -> bo
     if hold.hold(model, now, launched) {
         return false;
     }
-    let theme = theme::Theme::load();
+    let theme = theme::Theme::load_named(crate::themedir::DESKTOP, &[]);
     let map = keymap::Map::load();
     let mut frame = String::new();
     render::draw(model, &theme, &map, 80, 24, None, now.duration_since(launched), &mut frame).unwrap()

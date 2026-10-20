@@ -51,8 +51,27 @@ check "a read exits 0" "0" "$rc"
 check "a read answers the shipped view" "1" "$(echo "$out" | grep -c '"view": "list"')"
 check "a read answers the shipped menu.hidden" "1" "$(echo "$out" | grep -c '"copyAs"')"
 check "a read ships Open folders while dragging off" "1" "$(echo "$out" | grep -c '"openFoldersWhileDragging": false')"
-check "a read answers every top-level key" "41" "$(echo "$out" | grep -c '^  "')"
+check "a read answers every top-level key" "42" "$(echo "$out" | grep -c '^  "')"
 check "a read leaves no state file behind" "0" "$([ -e "$UI" ] && echo 1 || echo 0)"
+
+# The Theme section's own key: the theme the operator chose and the colours they
+# chose over the theme's. The name is one path segment or the desktop shell's, and
+# a colour is a hex for a role the app draws with. The document read above is kept
+# in $out, so these write to a shell of their own.
+theme_out=$(flea_ui '{"theme":{"name":"rose-pine","colors":{"accent":"#4c8bf5"}}}' 2>&1); rc=$?
+check "a theme of the operator's own lands" "1" "$(grep -c '"name": "rose-pine"' "$UI")"
+check "and the accent with it" "1" "$(grep -c '"accent": "#4c8bf5"' "$UI")"
+theme_out=$(flea_ui '{"theme":{"name":"../../etc"}}' 2>&1); rc=$?
+check "a name that could reach outside the theme directories is refused" "1" "$(grep -c '"name": "rose-pine"' "$UI")"
+theme_out=$(flea_ui '{"theme":{"colors":{"accent":"red"}}}' 2>&1); rc=$?
+check "a colour that is not a colour is refused" "1" "$(grep -c '"accent": "#4c8bf5"' "$UI")"
+theme_out=$(flea_ui '{"theme":{"colors":{"nosuchrole":"#ffffff"}}}' 2>&1); rc=$?
+check "a role the app does not draw with is refused" "1" "$(grep -c '"accent": "#4c8bf5"' "$UI")"
+theme_out=$(flea_ui '{"theme":{"colors":{"background":"#101010"}}}' 2>&1); rc=$?
+check "a colour the operator set lands beside the others" "1" "$(grep -c '"background": "#101010"' "$UI")"
+theme_out=$(flea_ui '{"theme":{"colors":{"background":null}}}' 2>&1); rc=$?
+check "a colour forgotten goes back to the theme's own" "0" "$(grep -c '"background"' "$UI")"
+check "and the one beside it stands" "1" "$(grep -c '"accent": "#4c8bf5"' "$UI")"
 
 # The window paints a first launch before any file exists, so the two fallbacks it holds have to be
 # the shipped ones. A drift here is a fresh install whose menu and columns disagree with the state
@@ -99,7 +118,7 @@ check "a patch writes the file" "1" "$([ -f "$UI" ] && echo 1 || echo 0)"
 # 240 is not a stop, so src/uistate.rs Rule::SidebarWidth snaps it down to 224: this asserted the
 # raw number and had been failing since the snap was written, which is why it pins the snap now.
 check "the stored file carries the patched width, snapped to a stop" "1" "$(grep -c '"sidebarWidth": 224' "$UI")"
-check "the stored file keeps every other key" "41" "$(grep -c '^  "' "$UI")"
+check "the stored file keeps every other key" "42" "$(grep -c '^  "' "$UI")"
 check "the state file is owner only" "600" "$(stat -c '%a' "$UI")"
 check "the state directory is owner only" "700" "$(stat -c '%a' "$STATE/flea")"
 # ls -A: ui.json and its lock, and no temp file left behind by the rename.
@@ -399,7 +418,7 @@ check "and the read still answers the full default shape" "1" "$(flea_ui 2>&1 | 
 out=$(flea_ui '{"hidden":true}' 2>&1); rc=$?
 check "a patch onto that same file exits 0" "0" "$rc"
 check "and does not leave the operator's bytes" "1" "$([ "$(sha256sum "$UI" | cut -d' ' -f1)" != "$broken_sha" ] && echo 1 || echo 0)"
-check "it writes the full default document instead" "41" "$(grep -c '^  "' "$UI")"
+check "it writes the full default document instead" "42" "$(grep -c '^  "' "$UI")"
 check "so the hand-written key is gone" "1" "$(grep -c '"density": "compact"' "$UI")"
 check "and the patch itself landed" "1" "$(grep -c '"hidden": true' "$UI")"
 

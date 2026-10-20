@@ -49,7 +49,7 @@ pub fn run(device: &str) -> i32 {
 
 // The same shell the window opens, with the device the dialog opens over; no passphrase crosses here.
 fn unlock_command(ui: &Path, device: &str) -> Command {
-    let mut cmd = gui::qs_command(ui.join(paths::ENTRY));
+    let mut cmd = gui::qs_command(ui.join(paths::ENTRY), &crate::themedir::stored_name());
     cmd.env(ENV, device);
     cmd
 }
@@ -72,7 +72,7 @@ mod tests {
     fn only_the_unlock_launch_hands_qs_the_device() {
         // The parent's value is named here, so the process environment is never written.
         let parent = Some("/dev/sdb1");
-        let plain = gui::qs_command(PathBuf::from("ui/shell.qml"));
+        let plain = gui::qs_command(PathBuf::from("ui/shell.qml"), crate::themedir::DESKTOP);
         assert_eq!(child_sees(&plain, ENV, parent), None, "a plain launch inherited the parent's {}", ENV);
         let unlock = unlock_command(Path::new("ui"), "/dev/sdc1");
         assert_eq!(child_sees(&unlock, ENV, parent), Some(OsString::from("/dev/sdc1")));

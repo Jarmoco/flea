@@ -21,6 +21,11 @@ Item {
     signal stepped(int direction)
     // The ruler's own way in: the same writer a step reaches, addressed by stop instead of direction.
     signal stopPicked(int stop)
+    // The colour row's editor: the role, and the hex the operator set for it. An empty hex is
+    // the theme's own colour for that role.
+    signal colorCommitted(string role, string hex)
+    // The editor opened or closed, so the panel can take the keyboard back when it closes.
+    signal colorEditing(bool editing)
 
     readonly property string kind: root.row.kind || "fact"
     readonly property bool isGroup: root.kind === "group"
@@ -50,6 +55,17 @@ Item {
     readonly property string boxValue: root.row.on === true ? "on" : "off"
     // SettingsMenus rule 5: the one row that can destroy a file carries the urgent role the model already gives it.
     readonly property bool isUrgent: root.row.role === "error" && !root.isHint
+    // A colour row names a role of the palette, and the swatch in its mark slot draws the
+    // colour the app draws with for it: the operator's own where they set one. The role is
+    // named colorRole and not role, which the settings rows already spend on their own marks.
+    readonly property bool isColor: root.row.colorRole !== undefined
+    readonly property color swatch: root.isColor
+        ? (hexField.draft !== "" && hexField.valid ? hexField.draft : Theme.color.role(root.row.colorRole))
+        : "transparent"
+    // The row's own editor: the value becomes a field, the way the listing's rename field
+    // takes the row's name. A colour the operator typed lands in the state, and the palette
+    // is laid over again, so the window redraws in it at once.
+    readonly property bool editing: hexField.opened
 
     enabled: !root.greyed
     opacity: root.greyed ? Theme.disabledOpacity : 1
@@ -218,9 +234,22 @@ Item {
 
         Flea.Glyph {
             anchors.fill: parent
-            visible: root.row.glyph !== undefined && root.row.mark === undefined
+            visible: root.row.glyph !== undefined && root.row.mark === undefined && !root.isColor
             name: root.row.glyph !== undefined ? root.row.glyph : "file"
             color: root.isUrgent ? Theme.color.error : Theme.color.mutedFrame
+        }
+
+        // A colour row's mark is the colour itself: the swatch the app draws with for that
+        // role, so the row shows the operator what they are about to change.
+        Rectangle {
+            anchors.centerIn: parent
+            width: Math.round(Theme.markSize * 0.66)
+            height: width
+            radius: width / 2
+            visible: root.isColor
+            color: root.swatch
+            border.width: Theme.spacing.hairline
+            border.color: Theme.color.mutedFrame
         }
 
         Flea.TailscaleMark {
@@ -306,8 +335,8 @@ Item {
 
         // A choice's name, a fact's value and the caption a check row carries are all one thing: the value the row currently holds, drawn on the right the way the boards draw it. SettingsRest rule 6 mutes a fact whole, and the one fact reporting a live number keeps the foreground for it; rule 5 takes the head off a value whose identity is in its tail.
         Text {
-            visible: root.kind === "fact" || root.kind === "action" || root.hasSteps
-                     || (root.hasBox && (root.row.value || "") !== "")
+            visible: !root.editing && (root.kind === "fact" || root.kind === "action" || root.hasSteps
+                     || root.isColor || (root.hasBox && (root.row.value || "") !== ""))
             height: Theme.markSize
             verticalAlignment: Text.AlignVCenter
             text: root.row.value || ""
@@ -318,6 +347,22 @@ Item {
             textFormat: Text.PlainText
             width: Math.min(implicitWidth, root.width * 0.56)
             elide: root.row.elide === "head" ? Text.ElideLeft : Text.ElideRight
+        }
+
+        // The colour row's own editor: the value becomes a field, and the swatch beside it
+        // previews the colour as it is typed. An empty field is the theme's own colour.
+        Flea.SettingsColorField {
+            id: hexField
+            visible: root.editing
+            height: Theme.markSize
+            verticalAlignment: Text.AlignVCenter
+            color: hexField.valid ? Theme.color.foreground : Theme.color.error
+            font.family: Theme.font.family
+            font.pixelSize: Theme.font.body
+            selectByMouse: true
+            width: Math.min(Math.max(implicitWidth, 68), root.width * 0.4)
+            onCommitted: function (hex) { root.commitEdit(hex) }
+            onCancelled: root.cancelEdit()
         }
 
         // SettingsRest draws the sentence after the value it explains, so the row reads label, value, sentence; half the row at most, or the label would elide to make space for prose.
@@ -346,7 +391,7 @@ Item {
         }
 
         Flea.Glyph {
-            visible: root.hasSteps || root.kind === "action" && root.row.inert !== true
+            visible: root.hasSteps || root.kind === "action" && root.row.inert !== true || root.isColor
             width: visible ? Theme.markSize : 0
             height: Theme.markSize
             name: "chevron-right"
@@ -379,6 +424,7 @@ Item {
     HoverHandler {
         id: pointer
         enabled: root.hasBox || root.isGroupControl || root.kind === "choice" || root.kind === "action" || root.isFavourite
+                 || root.isColor
         property bool armed: false
         property point restingAt
         onHoveredChanged: pointer.armed = false
@@ -400,10 +446,35 @@ Item {
     // A segment and a ruler each own their own targets, so the row behind them must not also fire:
     // a tap on the option already showing would otherwise toggle the very setting it names.
     TapHandler {
-        enabled: (root.hasBox || root.isGroupControl || root.kind === "action") && !root.isLock && !root.hasSteps
-                 && !root.hasSegment && !root.isRuler
+        enabled: (root.hasBox || root.isGroupControl || root.kind === "action" || root.kind === "color")
+                 && !root.isLock && !root.hasSteps && !root.hasSegment && !root.isRuler
         acceptedButtons: Qt.LeftButton
         gesturePolicy: TapHandler.ReleaseWithinBounds
         onTapped: root.activated()
+    }
+
+    // The editor opens on the colour the row holds, and the colour that lands is the
+    // row's own: the panel writes it, and the palette is laid over again.
+    function beginEdit() {
+        if (!root.isColor || root.editing)
+            return
+        hexField.open(root.row.hex || "")
+        root.colorEditing(true)
+    }
+
+    function commitEdit(hex) {
+        if (!root.editing)
+            return
+        hexField.close()
+        root.colorEditing(false)
+        root.colorCommitted(root.row.colorRole, hex)
+    }
+
+    // The editor closes and the colour stands as it was.
+    function cancelEdit() {
+        if (!root.editing)
+            return
+        hexField.close()
+        root.colorEditing(false)
     }
 }

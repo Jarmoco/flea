@@ -156,6 +156,7 @@ js/Selection.js
 js/Settings.js
 js/SettingsAbout.js
 js/SettingsShelf.js
+js/SettingsTheme.js
 js/ShelfPile.js
 js/SlowClick.js
 js/SlowOp.js
@@ -176,4 +177,4 @@ js/TrashDates.js
 js/UiState.js
 js/Update.js
 js/UserDirs.js
-bytes 1664229
+bytes 1669787

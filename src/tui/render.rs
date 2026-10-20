@@ -749,7 +749,7 @@ mod tests {
     #[test]
     fn counted_lines_read_singular_for_one_and_plural_for_many() {
         let mut model = Model::new(std::path::PathBuf::from("/"), &crate::jsondoc::Json::Null);
-        let theme = Theme::from_text("");
+        let theme = Theme::from_text_with("", &[]);
         model.total = 1;
         let one = footer(&model, &theme, 120, std::time::Duration::ZERO);
         assert!(one.contains("1 item") && !one.contains("1 items"), "one row in the footer: {one}");
@@ -857,7 +857,7 @@ mod tests {
         model.fail("Missing".into());
         model.transfer = "Copying 2 of 5".into();
         model.search = "Searching 12 matches".into();
-        let theme = Theme::from_text("");
+        let theme = Theme::from_text_with("", &[]);
         let output = footer(&model, &theme, 120, std::time::Duration::ZERO);
         assert!(output.contains(&format!("{}Denied (+1) · Escape dismisses\x1b[0m", theme.error)));
         assert!(output.find("Denied").unwrap() < output.find("Copying").unwrap());
@@ -877,7 +877,7 @@ action = "keymapSheet"
 "##);
         let mut model = Model::new(std::path::PathBuf::from("/"), &crate::jsondoc::Json::Null);
         model.fail("Denied".into());
-        let theme = Theme::from_text("");
+        let theme = Theme::from_text_with("", &[]);
         model.hints = crate::tui::keymap::Hints::new(&rebound, "default");
         let output = footer(&model, &theme, 120, std::time::Duration::ZERO);
         assert!(output.contains("Denied · Backspace dismisses"), "{output:?}");

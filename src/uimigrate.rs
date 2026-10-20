@@ -3,8 +3,12 @@ use crate::jsondoc::Json;
 use crate::uischema::STATE_VERSION;
 
 // Each change by the stateVersion it arrived in, oldest first; a file stamped below one has not had it.
-const STEPS: &[(f64, fn(Json) -> Json)] =
-    &[(1.0, show_unmounted_drives), (2.0, hide_new_menu_rows), (3.0, hide_run_rows)];
+const STEPS: &[(f64, fn(Json) -> Json)] = &[
+    (1.0, show_unmounted_drives),
+    (2.0, hide_new_menu_rows),
+    (3.0, hide_run_rows),
+    (4.0, move_accent_to_colors),
+];
 
 // The file as found carries the stamp: the merged document already holds the shipped one in its place.
 pub fn migrated(found: &Json, merged: Json) -> Json {
@@ -77,6 +81,22 @@ fn hide_run_rows(state: Json) -> Json {
     with_key(state, "menu", with_key(menu, "hidden", hidden))
 }
 
+// The accent became one colour among the others, so a file that stored it under the theme's own
+// key keeps it: it moves into the colours map, where every colour the operator owns now lives.
+fn move_accent_to_colors(state: Json) -> Json {
+    let theme = match state.get("theme") {
+        Some(theme) => theme.clone(),
+        None => return state,
+    };
+    let accent = theme.get("accent").and_then(Json::as_str).unwrap_or("").to_string();
+    let mut colors = theme.get("colors").and_then(Json::as_object).map(<[(String, Json)]>::to_vec).unwrap_or_default();
+    if crate::uistate::is_a_colour(&accent) && !colors.iter().any(|(role, _)| role == "accent") {
+        colors.push(("accent".to_string(), Json::Str(accent)));
+    }
+    let theme = with_key(theme, "colors", Json::Obj(colors));
+    with_key(state, "theme", without_key(theme, "accent"))
+}
+
 // Replaced where it stands, so the key order a rewrite renders is the merge's and not this file's.
 fn with_key(object: Json, key: &str, value: Json) -> Json {
     let Json::Obj(mut pairs) = object else { return object };
@@ -84,6 +104,13 @@ fn with_key(object: Json, key: &str, value: Json) -> Json {
         Some(slot) => slot.1 = value,
         None => pairs.push((key.to_string(), value)),
     }
+    Json::Obj(pairs)
+}
+
+// One key gone, so a key that moved house does not linger beside the one that replaced it.
+fn without_key(object: Json, key: &str) -> Json {
+    let Json::Obj(mut pairs) = object else { return object };
+    pairs.retain(|(k, _)| k != key);
     Json::Obj(pairs)
 }
 
@@ -288,5 +315,29 @@ mod tests {
         assert_eq!(stored.get("keys").and_then(Json::as_str), Some("mac"));
         assert_eq!(stored.get("view").and_then(Json::as_str), Some("columns"));
         assert_eq!(stored.get("density").and_then(Json::as_str), Some("comfortable"));
+    }
+
+    // The accent became one colour among the others, so a file that stored it keeps it: the
+    // migration moves it into the colours map and the old key does not linger beside it.
+    #[test]
+    fn a_stored_accent_moves_into_the_colours_map_and_the_old_key_goes() {
+        let read = from_file(r##"{"theme":{"name":"rose-pine","accent":"#4c8bf5"}}"##);
+        let colors = read.get("theme").and_then(|t| t.get("colors")).and_then(Json::as_object).expect("theme.colors");
+        assert_eq!(colors.len(), 1);
+        assert_eq!(colors.iter().next().map(|(k, v)| (k.as_str(), v.as_str())), Some(("accent", Some("#4c8bf5"))));
+        assert!(read.get("theme").and_then(|t| t.get("accent")).is_none(), "the old key does not linger");
+        assert_eq!(read.get("theme").and_then(|t| t.get("name")).and_then(Json::as_str), Some("rose-pine"));
+        assert_eq!(stamp(&read), Some(LATEST));
+        // A file that stored no accent has nothing to move, and the colours it does hold stand.
+        let none = from_file(r#"{"theme":{"name":"","accent":""}}"#);
+        let colors = none.get("theme").and_then(|t| t.get("colors")).and_then(Json::as_object).expect("theme.colors");
+        assert_eq!(colors.len(), 0);
+        let kept = from_file(r##"{"theme":{"accent":"","colors":{"background":"#101315"}}}"##);
+        let colors = kept.get("theme").and_then(|t| t.get("colors")).and_then(Json::as_object).expect("theme.colors");
+        assert_eq!(colors.len(), 1, "the colour beside it stands: {:?}", colors.iter().map(|(k, _)| k.as_str()).collect::<Vec<_>>());
+        // A colour the operator already set for the accent is not overwritten by the old key.
+        let both = from_file(r##"{"theme":{"accent":"#111111","colors":{"accent":"#4c8bf5"}}}"##);
+        let colors = both.get("theme").and_then(|t| t.get("colors")).and_then(Json::as_object).expect("theme.colors");
+        assert_eq!(colors.iter().next().map(|(k, v)| (k.as_str(), v.as_str())), Some(("accent", Some("#4c8bf5"))));
     }
 }

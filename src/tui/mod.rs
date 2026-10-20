@@ -68,7 +68,10 @@ pub fn run(path: Option<&str>, select: Option<&str>) -> i32 {
         let mut model = model;
         let map = keymap::Map::load();
         model.hints = keymap::Hints::new(&map, &model.preset);
-        let theme = theme::Theme::load();
+        let theme = theme::Theme::load_named(
+            &crate::themedir::chosen(&settings),
+            &crate::themedir::own_colors(&settings),
+        );
         let mut decoder = input::Decoder::default();
         let started = std::time::Instant::now();
         let mut frame = String::new();

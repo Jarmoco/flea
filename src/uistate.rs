@@ -66,6 +66,8 @@ fn check(pairs: &[(String, Json)], schema: &[(&str, Rule)], prefix: &str) -> Res
             Rule::FolderSorts if is_folder_sorts_patch(value) => {}
             // A null folderViews entry forgets that path, and only a patch may send one.
             Rule::FolderViews if is_folder_views_patch(value) => {}
+            // A null colour forgets that role, and only a patch may send one.
+            Rule::Colors if is_colors_patch(value) => {}
             _ if fits(rule, value) => {}
             _ => return Err(format!("{}{} does not take {}", prefix, key, one_line(value))),
         }
@@ -88,6 +90,7 @@ fn apply(current: &Json, patch: &Json, schema: &[(&str, Rule)]) -> Json {
             (None, held, Some(Rule::FolderSorts)) => merge_folder_sorts(held, value),
             (None, held, Some(Rule::FolderViews)) => merge_folder_views(held, value),
             (None, held, Some(Rule::ColumnWidths)) => merge_column_widths(held, value),
+            (None, held, Some(Rule::Colors)) => merge_colors(held.as_ref(), value),
             _ => normalized(rule, value),
         };
         match out.iter_mut().find(|(k, _)| k == key) {
@@ -114,6 +117,8 @@ fn merge(default: &Json, found: &Json, schema: &[(&str, Rule)]) -> Json {
                 // A hand-edited map heals one bad entry rather than losing the key.
                 Rule::FolderSorts => normalized(Some(rule), &clean_folder_sorts(value)),
                 Rule::FolderViews => normalized(Some(rule), &clean_folder_views(value)),
+                // The operator's own colours heal the same way: one bad entry goes, the rest stay.
+                Rule::Colors => clean_colors(value),
                 _ if fits(rule, value) => normalized(Some(rule), value),
                 _ => fallback,
             },
@@ -219,6 +224,13 @@ fn fits(rule: &Rule, value: &Json) -> bool {
             None => false,
         },
         Rule::Version => fits(&Rule::Count(0.0, f64::MAX), value),
+        // A theme's own name: the desktop shell's, no theme at all, or one path segment.
+        Rule::ThemeName => match value.as_str() {
+            Some(text) => text.is_empty() || text == crate::themedir::DESKTOP || crate::themedir::is_theme_name(text),
+            None => false,
+        },
+        // The operator's own colours: a role the app draws with, and a hex triple for it.
+        Rule::Colors => is_colors(value),
         Rule::TextSize => match value {
             Json::Str(s) => s == "system",
             _ => value.as_f64().map(|n| TEXT_SIZE_STOPS.contains(&n)).unwrap_or(false),
@@ -260,6 +272,58 @@ fn is_action_id(s: &str) -> bool {
 // A remembered pane is somewhere the restore can list: an absolute path, or a URI naming its root.
 fn is_a_place(s: &str) -> bool {
     s.starts_with('/') || s.contains("://")
+}
+
+// A colour as a hex triple, the shape every theme's colours.toml writes.
+pub fn is_a_colour(s: &str) -> bool {
+    s.len() == 7 && s.starts_with('#') && s[1..].bytes().all(|b| b.is_ascii_hexdigit())
+}
+
+// The operator's own colours: a role the app draws with, and a hex triple for it. A role the
+// app does not draw with is not a colour Flea can hold, so it is refused whole.
+fn is_colors(value: &Json) -> bool {
+    let Some(pairs) = value.as_object() else { return false };
+    pairs
+        .iter()
+        .all(|(role, hex)| crate::uischema::COLOR_ROLES.contains(&role.as_str()) && hex.as_str().is_some_and(is_a_colour))
+}
+
+// A colours patch may forget one role with null, which is how a row goes back to the theme's own.
+fn is_colors_patch(value: &Json) -> bool {
+    let Some(pairs) = value.as_object() else { return false };
+    pairs.iter().all(|(role, hex)| {
+        crate::uischema::COLOR_ROLES.contains(&role.as_str())
+            && (matches!(hex, Json::Null) || hex.as_str().is_some_and(is_a_colour))
+    })
+}
+
+// A colours patch names only what changed: one role's own colour, and null forgets it.
+fn merge_colors(held: Option<&Json>, patch: &Json) -> Json {
+    let mut pairs = held.and_then(Json::as_object).map(<[(String, Json)]>::to_vec).unwrap_or_default();
+    if let Some(entries) = patch.as_object() {
+        for (role, hex) in entries {
+            pairs.retain(|(k, _)| k != role);
+            if !matches!(hex, Json::Null) {
+                pairs.push((role.clone(), hex.clone()));
+            }
+        }
+    }
+    Json::Obj(pairs)
+}
+
+// A read keeps the entries a hand edit left valid and drops only the bad ones, so one colour
+// written as a word does not cost the operator the other thirteen.
+fn clean_colors(value: &Json) -> Json {
+    let Some(pairs) = value.as_object() else { return Json::Obj(Vec::new()) };
+    Json::Obj(
+        pairs
+            .iter()
+            .filter(|(role, hex)| {
+                crate::uischema::COLOR_ROLES.contains(&role.as_str()) && hex.as_str().is_some_and(is_a_colour)
+            })
+            .map(|(role, hex)| (role.clone(), hex.clone()))
+            .collect(),
+    )
 }
 
 // Every open tab's folder in order, with the current tab's index inside the list.
@@ -395,6 +459,63 @@ mod tests {
         assert_eq!(state.get("places").unwrap().get("sidebarWidth").unwrap().as_f64(), Some(256.0));
         let invalid = from_file(r#"{"places":{"sidebarWidth":"wide"}}"#);
         assert_eq!(invalid.get("places").unwrap().get("sidebarWidth").unwrap().as_f64(), Some(192.0));
+    }
+
+    #[test]
+    fn the_theme_section_keeps_a_name_it_can_resolve_and_refuses_one_it_cannot() {
+        // The shipped default follows the desktop shell's own theme.
+        assert_eq!(
+            from_file(r#"{}"#).get("theme").unwrap().get("name").unwrap().as_str(),
+            Some("desktop")
+        );
+        // A theme's own name is one path segment, and Flea's own palette is no name at all.
+        let kept = from_file(r##"{"theme":{"name":"rose-pine"}}"##);
+        assert_eq!(kept.get("theme").unwrap().get("name").unwrap().as_str(), Some("rose-pine"));
+        let own = from_file(r#"{"theme":{"name":""}}"#);
+        assert_eq!(own.get("theme").unwrap().get("name").unwrap().as_str(), Some(""));
+        // A name that could reach outside the theme directories costs the default.
+        let escaped = from_file(r#"{"theme":{"name":"../../etc"}}"#);
+        assert_eq!(escaped.get("theme").unwrap().get("name").unwrap().as_str(), Some("desktop"));
+    }
+
+    // The operator's own colours: a role the app draws with, and a hex triple for it. A role the
+    // app does not draw with is refused whole, and one bad entry heals alone.
+    #[test]
+    fn the_operator_own_colours_hold_a_hex_per_role_and_heal_one_bad_entry() {
+        let current = from_file("{}");
+        let takes = |patch: &str| patched(&current, &jsondoc::parse(patch).expect("patch parses"));
+        for good in [r##"{"theme":{"colors":{}}}"##,
+                     r##"{"theme":{"colors":{"background":"#101315"}}}"##,
+                     r##"{"theme":{"colors":{"accent":"#4c8bf5","error":"#a55555"}}}"##,
+                     r##"{"theme":{"colors":{"background":null}}}"##] {
+            assert!(takes(good).is_ok(), "{} is a value its key takes", good);
+        }
+        for (bad, named) in [(r##"{"theme":{"colors":{"nosuchrole":"#101315"}}}"##, "theme.colors"),
+                             (r#"{"theme":{"colors":{"background":"red"}}}"#, "theme.colors"),
+                             (r##"{"theme":{"colors":{"background":"#10131"}}}"##, "theme.colors"),
+                             (r#"{"theme":{"colors":[]}}"#, "theme.colors"),
+                             (r##"{"theme":{"colors":"#101315"}}"##, "theme.colors"),
+                             (r##"{"theme":{"nosuchkey":"#101315"}}"##, "theme.nosuchkey")] {
+            let message = takes(bad).expect_err("the patch must be refused");
+            assert!(message.contains(named), "{} should name {}, got {}", bad, named, message);
+        }
+        // A patch names one role and leaves the others standing.
+        let one = takes(r##"{"theme":{"colors":{"background":"#101315"}}}"##).expect("patch lands");
+        let two = patched(&one, &jsondoc::parse(r##"{"theme":{"colors":{"accent":"#4c8bf5"}}}"##).expect("patch parses"))
+            .expect("the second lands");
+        let map = two.get("theme").and_then(|t| t.get("colors")).and_then(Json::as_object).expect("theme.colors");
+        assert_eq!(map.len(), 2, "both colours stand: {:?}", map.iter().map(|(k, _)| k.as_str()).collect::<Vec<_>>());
+        // A null forgets one role and keeps the rest.
+        let forgotten = patched(&two, &jsondoc::parse(r##"{"theme":{"colors":{"background":null}}}"##).expect("patch parses"))
+            .expect("the forget lands");
+        let map = forgotten.get("theme").and_then(|t| t.get("colors")).and_then(Json::as_object).expect("theme.colors");
+        assert_eq!(map.len(), 1);
+        assert_eq!(map.iter().next().map(|(k, _)| k.as_str()), Some("accent"));
+        // A file carrying one bad entry keeps the good ones beside it.
+        let read = from_file(r##"{"theme":{"colors":{"background":"red","accent":"#4c8bf5","nosuchrole":"#ffffff"}}}"##);
+        let map = read.get("theme").and_then(|t| t.get("colors")).and_then(Json::as_object).expect("theme.colors");
+        assert_eq!(map.len(), 1, "only the bad entries go: {:?}", map.iter().map(|(k, _)| k.as_str()).collect::<Vec<_>>());
+        assert_eq!(map.iter().next().map(|(k, v)| (k.as_str(), v.as_str())), Some(("accent", Some("#4c8bf5"))));
     }
 
     #[test]

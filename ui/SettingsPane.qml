@@ -22,6 +22,9 @@ Flickable {
     signal favouriteRemoved(int index)
     signal stepped(int index, int direction)
     signal stopPicked(int index, int stop)
+    // A colour row's editor: the colour the operator typed, and the editor opening or closing.
+    signal colorCommitted(int index, string role, string hex)
+    signal colorEditing(int index, bool editing)
 
     // count is read so the binding re-evaluates once the Repeater has built its columns.
     readonly property Item current: sections.count > 0
@@ -171,6 +174,8 @@ Flickable {
                     onFavouriteRemoved: root.favouriteRemoved(index)
                     onStepped: function (direction) { root.stepped(index, direction) }
                     onStopPicked: function (stop) { root.stopPicked(index, stop) }
+                    onColorCommitted: function (role, hex) { root.colorCommitted(index, role, hex) }
+                    onColorEditing: function (editing) { root.colorEditing(index, editing) }
                 }
             }
         }

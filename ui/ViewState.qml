@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.Commons
+import qs.Commons as Commons
 import "js/Density.js" as Density
 import "js/Format.js" as Format
 import "js/Keymap.js" as Keymap
@@ -56,6 +57,23 @@ QtObject {
     // the compositor's alone.
     readonly property var display: root.state.display || ({})
     readonly property var textSize: TextSize.parse(root.display.textSize)
+
+    // The Theme section's own state: which theme to draw with, and the colours the
+    // operator's own over it. `theme.name` is the desktop shell's own theme, a theme
+    // directory's name, or "" for no theme at all, which is the palette of Flea's own;
+    // the launcher resolved that name to a directory before this window opened, so the
+    // first paint already carries it, and the window sets the directory again only
+    // when the operator picks another one.
+    readonly property var theme: root.state.theme || ({})
+    // The default is src/themedir.rs's own, so a state file this window could not
+    // read still names the theme the launcher drew with.
+    readonly property string themeName: typeof root.theme.name === "string" ? root.theme.name : "desktop"
+    // The operator's own colours, one hex per role the app draws with. A role the map
+    // does not name keeps the theme's own colour for it.
+    readonly property var themeColors: root.theme.colors || ({})
+    // The palette reader owns the colours and the state owns the choice, so every
+    // change of the document puts the chosen ones back.
+    onStateChanged: Commons.Color.overrides = (root.state.theme || {}).colors || ({})
 
     // Omarchy's own size, held here so the Ctrl+Shift chords and the panel's own rows step away
     // from and back to one anchor rather than each resolving their own.
@@ -245,6 +263,41 @@ QtObject {
             leaf[parts[1]] = value
             root.changeLeaf(parts[0], leaf)
         }
+    }
+
+    // The operator's own colour for one role: a hex triple, or "" for the theme's own.
+    //
+    // The document holds every colour the operator owns, and the patch names the one that
+    // changed alone, because a colour map merges per entry on the other side.
+    function setThemeColor(role, hex) {
+        var colors = {}
+        for (var held in root.themeColors)
+            colors[held] = root.themeColors[held]
+        var forgotten = hex === undefined || hex === null || hex === ""
+        if (forgotten)
+            delete colors[role]
+        else
+            colors[role] = hex
+        var patch = {}
+        patch[role] = forgotten ? null : hex
+        root.changeMapEntries("theme", { colors: patch }, root.themeWith(colors))
+    }
+
+    // Every colour back to the theme's own, which the patch forgets one role at a time.
+    function clearThemeColors() {
+        var patch = {}
+        for (var role in root.themeColors)
+            patch[role] = null
+        root.changeMapEntries("theme", { colors: patch }, root.themeWith({}))
+    }
+
+    // The theme group with these colours in it, so a change of one leaves the rest standing.
+    function themeWith(colors) {
+        var theme = {}
+        for (var key in root.theme)
+            theme[key] = root.theme[key]
+        theme.colors = colors
+        return theme
     }
 
     // The Display controls and text-size chords share these writers.

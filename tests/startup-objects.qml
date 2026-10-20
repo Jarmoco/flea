@@ -251,7 +251,7 @@ ShellRoot {
             var marks = root.marksOff ? 0 : 3
             if ((sample.counts.LangMark || 0) !== marks || (sample.counts.LangMarkLoader || 0) !== marks)
                 return root.finish(false, "the default or saved-OFF code slots have the wrong language object count")
-            var baseline = root.marksOff ? 598 : 613
+            var baseline = root.marksOff ? 595 : 610
             if (sample.total !== baseline)
                 return root.finish(false, "startup moved from its " + baseline + "-object baseline to " + sample.total)
             console.log("LANGCOST startup off=" + root.marksOff + " total=" + sample.total

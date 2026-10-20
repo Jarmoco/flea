@@ -20,7 +20,11 @@ QtObject {
     property color metadata: root.material.metadata
     property color opaqueMetadataFrame: Qt.darker(Commons.Color.foreground, 1.4)
     property color metadataFrame: root.modeInk(root.opaqueMetadataFrame, 3)
-    readonly property color accent: root.modeInk(Commons.Color.accent, 3)
+    // The accent as it is drawn: lifted to be readable on the ground it is drawn
+    // on, so an accent the operator chose reads on a light theme too. The frame
+    // is the same accent lifted against the surface, which is a step lighter.
+    readonly property color opaqueAccent: Contrast.ensureRatio(Commons.Color.accent, root.background, 3)
+    readonly property color accent: root.modeInk(root.opaqueAccent, 3)
     property color opaqueError: Commons.Color.urgent
     property color error: root.modeInk(root.opaqueError, root.textContrast, root.muted)
     property color opaqueErrorOnSurface: Commons.Color.urgent
@@ -30,9 +34,17 @@ QtObject {
     property color symlink: root.modeInk(root.opaqueSymlink, root.textContrast)
     property color opaqueExecutable: Theme.fallbackColor.executable
     property color executable: root.modeInk(root.opaqueExecutable, root.textContrast)
-    property color opaqueAccentFrame: Commons.Color.accent
+    // The frame is the same accent lifted against the surface, which is a step
+    // lighter. It is a writable binding, as it was before the accent became the
+    // operator's to choose, so a test can hold a sentinel in it. An operator's
+    // own frame is drawn as they set it, with no lift over it.
+    property color opaqueAccentFrame: Commons.Color.overridden("accentFrame")
+        ? Commons.Color.overrides.accentFrame : Contrast.ensureRatio(root.opaqueAccent, root.surface, 3)
     property color accentFrame: root.modeInk(root.opaqueAccentFrame, 3)
     property bool accentHasHue: Commons.Color.accent.hsvSaturation > root.hueFloor
+    // A role by name, so a row that names a colour can draw the colour the app
+    // draws with, which is the operator's own where they set one.
+    function role(name) { return root[name] }
     readonly property var opaquePalette: ({background: root.background, surface: root.surface,
         foreground: Commons.Color.foreground, muted: root.opaqueMuted, metadata: root.opaqueMetadata})
     readonly property var modePalette: Object.assign({}, root.opaquePalette, {blurBrightness: Glass.mode === "glassy" ? 0.75 : 1})

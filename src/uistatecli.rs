@@ -50,3 +50,19 @@ pub fn ui_state(args: &[String]) -> i32 {
 pub fn shelf_enabled(state: &jsondoc::Json) -> bool {
     state.get("shelf").and_then(|s| s.get("enabled")).and_then(|v| v.as_bool()) == Some(true)
 }
+
+/// The settled document and the theme it names, in one read of the file.
+///
+/// The launcher settles the file before the window and then reads it once more
+/// for the two things it needs from it: the shelf's own switch and the theme
+/// the operator chose.
+pub fn settled() -> (jsondoc::Json, String) {
+    match uistore::Store::user() {
+        Ok(store) => {
+            let state = store.read();
+            let theme = crate::themedir::chosen(&state);
+            (state, theme)
+        }
+        Err(_) => (jsondoc::Json::Obj(Vec::new()), crate::themedir::DESKTOP.to_string()),
+    }
+}

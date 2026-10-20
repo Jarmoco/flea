@@ -82,7 +82,9 @@ SettingsRow 1.0 SettingsRow.qml
 SettingsGroup 1.0 SettingsGroup.qml
 SettingsHint 1.0 SettingsHint.qml
 SettingsRuler 1.0 SettingsRuler.qml
+SettingsColorField 1.0 SettingsColorField.qml
 SettingsSegment 1.0 SettingsSegment.qml
+SettingsMenu 1.0 SettingsMenu.qml
 MediaSession 1.0 MediaSession.qml
 MediaStrip 1.0 MediaStrip.qml
 MediaTrack 1.0 MediaTrack.qml
@@ -225,3 +227,4 @@ PickerLifecycle 1.0 PickerLifecycle.qml
 ArchiveCompressDialog 1.0 ArchiveCompressDialog.qml
 ArchivePasswordDialog 1.0 ArchivePasswordDialog.qml
 ArchiveCards 1.0 ArchiveCards.qml
+ThemePicker 1.0 ThemePicker.qml
