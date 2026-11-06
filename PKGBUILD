@@ -3,7 +3,7 @@
 pkgname=flea
 pkgver=0.4.0
 pkgrel=1
-pkgdesc='Fast, keyboard-first file manager for Omarchy'
+pkgdesc='Fast, keyboard-first file manager for Linux desktops'
 arch=('x86_64' 'aarch64')
 url='https://github.com/thisisgm/flea'
 license=('Apache-2.0' 'BSD-2-Clause' 'BSD-3-Clause' 'CC0-1.0' 'ISC' 'MIT' 'MPL-2.0' 'Unicode-3.0' 'Zlib')
@@ -32,7 +32,6 @@ depends=(
   'libxkbcommon'       # keyboard maps, linked by flea-gui
   'libxkbcommon-x11'   # X11 keyboard maps, linked by flea-gui
   'mpv'                # libmpv.so.2 for the jailed GPUI audio/video decoder
-  'omarchy'            # desktop integration and the optional Omarchy bar shelf plugin
   'poppler-glib'       # PDF previews, which flea-gui loads at runtime
   'python'             # runs tools/flea-portal and tools/flea-filemanager1, which D-Bus activates
   'python-gobject'     # the D-Bus binding those two services answer with
@@ -63,6 +62,7 @@ optdepends=(
   'imagemagick: image conversion'
   'libarchive: archive listing and extraction'
   'libreoffice: office document previews'
+  'omarchy: Hyprland key bindings, the bar shelf, Omarchy themes and its updater'
   'tailscale: Taildrop sharing'
   'zoxide: frecent folders in the folder jump of the path bar'
 )

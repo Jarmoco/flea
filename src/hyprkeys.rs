@@ -13,17 +13,20 @@ const FLOAT_BEGIN: &str = "-- flea --picker: begin. Written by `flea --picker`; 
 const FLOAT_END: &str = "-- flea --picker: end.";
 // The picker's own app id, ui/boot/picker.qml's AppId pragma, which is not the window's.
 const PICKER_APP_ID: &str = "com.thisisgm.flea.picker";
-// Omarchy binds both to Nautilus in default/hypr/bindings/applications.lua; the cwd one opens on the active terminal's directory.
+// Omarchy binds both to Nautilus in default/hypr/bindings/applications.lua; the cwd one reads the
+// active terminal's directory when Omarchy's helper is there and falls back to the launcher's own.
 const BINDS: [(&str, &str, &str); 2] = [
     ("SUPER + SHIFT + F", "File manager", "flea --gui"),
-    ("SUPER + ALT + SHIFT + F", "File manager (cwd)", "flea --gui \"$(omarchy-cmd-terminal-cwd)\""),
+    ("SUPER + ALT + SHIFT + F", "File manager (cwd)", "flea --gui \"$(omarchy-cmd-terminal-cwd 2>/dev/null || pwd)\""),
 ];
 // hyprctl binds reports a chord as a mask: SUPER is 64, ALT is 8, SHIFT is 1.
 const MODMASKS: [u32; 2] = [65, 73];
 
 pub fn claim() -> Result<String, String> {
     let path = bindings_path()?;
-    let text = read(&path)?;
+    let Some(text) = read_optional(&path)? else {
+        return Ok(format!("keys: skipped, {} does not exist so this desktop has no Hyprland bindings to change", path.display()));
+    };
     if has_block(&text) {
         return Ok(format!("keys: already Flea's, the flea --default block is in {}", path.display()));
     }
@@ -50,7 +53,9 @@ pub fn claim() -> Result<String, String> {
 
 pub fn release() -> Result<String, String> {
     let path = bindings_path()?;
-    let text = read(&path)?;
+    let Some(text) = read_optional(&path)? else {
+        return Ok(format!("keys: nothing to undo, {} does not exist", path.display()));
+    };
     let Some(without) = without_block(&text)? else {
         return Ok(format!("keys: nothing to undo, no flea --default block in {}", path.display()));
     };
@@ -69,7 +74,9 @@ pub fn release() -> Result<String, String> {
 // A chooser is that same kind of window, so this asks for the same tag rather than inventing a size.
 pub fn float_claim() -> Result<String, String> {
     let path = bindings_path()?;
-    let text = read(&path)?;
+    let Some(text) = read_optional(&path)? else {
+        return Ok(format!("window: skipped, {} does not exist so there is no Hyprland rule to add", path.display()));
+    };
     if begin_at(&text, FLOAT_BEGIN).is_some() {
         return Ok(format!("window: already floating, the flea --picker block is in {}", path.display()));
     }
@@ -94,7 +101,9 @@ pub fn float_claim() -> Result<String, String> {
 
 pub fn float_release() -> Result<String, String> {
     let path = bindings_path()?;
-    let text = read(&path)?;
+    let Some(text) = read_optional(&path)? else {
+        return Ok(format!("window: nothing to undo, {} does not exist", path.display()));
+    };
     let Some(without) = cut(&text, FLOAT_BEGIN, FLOAT_END)? else {
         return Ok(format!("window: nothing to undo, no flea --picker block in {}", path.display()));
     };
@@ -111,9 +120,13 @@ fn bindings_path() -> Result<PathBuf, String> {
     Ok(config_home()?.join("hypr").join("bindings.lua"))
 }
 
-// Omarchy ships the file and hyprland.lua requires it, so a missing one is a broken box and not a first run.
-fn read(path: &std::path::Path) -> Result<String, String> {
-    fs::read_to_string(path).map_err(|e| format!("{} could not be read: {}. Omarchy keeps the key bindings there.", path.display(), io_message(&e)))
+// A desktop without Hyprland has no file here; that is a reason to skip, not a broken install.
+fn read_optional(path: &std::path::Path) -> Result<Option<String>, String> {
+    match fs::read_to_string(path) {
+        Ok(text) => Ok(Some(text)),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(e) => Err(format!("{} could not be read: {}. Hyprland keeps its key bindings there.", path.display(), io_message(&e))),
+    }
 }
 
 // A config error that was there before this change, so the change was not made.
@@ -281,9 +294,9 @@ mod tests {
         }
         assert_eq!(b.matches("hl.unbind(").count(), 2);
         assert_eq!(b.matches("o.bind(").count(), 2);
-        // The same launcher Omarchy's own { launch = } bindings use, and the cwd one reads the terminal's directory.
+        // The same launcher Omarchy's own { launch = } bindings use, and the cwd one reads the terminal's directory when it can.
         assert!(b.contains("{ launch = 'flea --gui' }"));
-        assert!(b.contains("{ launch = 'flea --gui \"$(omarchy-cmd-terminal-cwd)\"' }"));
+        assert!(b.contains("{ launch = 'flea --gui \"$(omarchy-cmd-terminal-cwd 2>/dev/null || pwd)\"' }"));
     }
 
     #[test]
@@ -332,8 +345,8 @@ mod tests {
         let dir = crate::backend::testdir::TestDir::new("hyprkeysunreadable");
         let folder = dir.dir("bindings.lua");
         assert_eq!(
-            read(&folder).unwrap_err(),
-            format!("{} could not be read: item is a folder. Omarchy keeps the key bindings there.", folder.display())
+            read_optional(&folder).unwrap_err(),
+            format!("{} could not be read: item is a folder. Hyprland keeps its key bindings there.", folder.display())
         );
     }
 

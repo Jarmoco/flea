@@ -53,7 +53,7 @@ impl GridHost {
         Self {
             view,
             state: Rc::new(RefCell::new(GridState::new(font(
-                "JetBrainsMono Nerd Font",
+                "monospace",
             )))),
             followed: None,
             refused: None,

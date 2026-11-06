@@ -166,6 +166,9 @@ check "the presenter is Omarchy's own floating terminal launcher" "omarchy-launc
   printf '/usr/bin/grep -i "^THP_enabled" /proc/self/status\n'
 } > "$D/bin/$presenter"
 chmod +x "$D/bin/$presenter"
+# The updater itself is only named to the presenter, but flea --update checks that it exists before starting one.
+printf '#!/bin/sh\nexit 0\n' > "$D/bin/omarchy-update"
+chmod +x "$D/bin/omarchy-update"
 
 : > "$ran"
 # Quickshell hands flea --update a pipe and closes it, so a pipe is what the updater must not inherit.
@@ -193,11 +196,11 @@ check "the window inherited huge pages off" "1" "$(grep -c '^GUI THP_enabled:[[:
 check "and the updater it started got them back" "1" "$(grep -c '^THP_enabled:[[:space:]]*1' "$ran")"
 
 out=$(env -i HOME="$D/home" XDG_DATA_HOME="$D/data" XDG_CONFIG_HOME="$D/config" XDG_CACHE_HOME="$D/cache" PATH="$D/empty" "$BIN" --update 2>&1); rc=$?
-check "a box with no presenter is the failure status" "2" "$rc"
-check "and one sentence saying nothing was updated" "flea: Omarchy's updater could not be started, so nothing was updated" "$out"
+check "a box with no updater is the failure status" "2" "$rc"
+check "and one sentence saying nothing was updated" "flea: no supported updater is installed, so nothing was updated" "$out"
 
-# The presenter ships in the omarchy package, which PKGBUILD must depend on or the row opens nothing.
-check "PKGBUILD depends on omarchy, which ships $presenter" "1" "$( (. ./PKGBUILD && printf '%s\n' "${depends[@]}") | grep -cxF omarchy)"
+# The presenter ships in the omarchy package, which PKGBUILD names as an optional dependency.
+check "PKGBUILD offers omarchy, which ships $presenter" "1" "$( (. ./PKGBUILD && printf '%s\n' "${optdepends[@]}") | grep -c '^omarchy: ')"
 
 sandbox_remove "$D"
 [ "$fail" -eq 0 ] && echo "update: all checks passed"

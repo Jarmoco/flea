@@ -49,16 +49,22 @@ impl Sources {
             .filter(|v| !v.is_empty())
             .map(PathBuf::from)
             .unwrap_or_else(|| home.join(".local/state"));
-        let theme = home.join(".local/state/omarchy/current/theme");
+        // Flea's own theme when the desktop shell installed none: the chosen
+        // theme's directory, or ~/.config/flea, so a palette and shell.toml work
+        // on any Linux desktop without a shell package.
+        let theme_dir = flea::themedir::theme_dir(&home, &state);
+        let user_shell =
+            flea::themedir::user_shell(&home).unwrap_or_else(|| config.join("flea/shell.toml"));
+        let toggles = state.join("omarchy/toggles/hypr");
         Self {
             inputs: [
-                theme.join("colors.toml"),
-                theme.join("shell.toml"),
-                home.join(".config/omarchy/shell.toml"),
+                theme_dir.join("colors.toml"),
+                theme_dir.join("shell.toml"),
+                user_shell,
                 config.join("fontconfig/fonts.conf"),
                 config.join("fontconfig/conf.d/50-omarchy-input-method.conf"),
-                state.join("omarchy/toggles/hypr/window-opaque.lua"),
-                state.join("omarchy/toggles/hypr/window-glassy.lua"),
+                toggles.join("window-opaque.lua"),
+                toggles.join("window-glassy.lua"),
             ],
             cache: state.join("flea/fc-match-monospace"),
         }

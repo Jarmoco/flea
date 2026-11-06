@@ -89,17 +89,27 @@ pub fn check() -> i32 {
     report.status()
 }
 
-// flea --update: Omarchy's updater in its own floating terminal, the command its menu and its bar run.
+// flea --update: the desktop shell's updater in its own floating terminal when it is installed.
 pub fn launch() -> i32 {
+    if !on_path(UPDATER) {
+        eprintln!("flea: no supported updater is installed, so nothing was updated");
+        return FAILED;
+    }
     let mut presenter = Command::new("omarchy-launch-floating-terminal-with-presentation");
     terminal::detach(&mut presenter);
     match presenter.arg(UPDATER).spawn() {
         Ok(_) => 0,
         Err(_) => {
-            eprintln!("flea: Omarchy's updater could not be started, so nothing was updated");
+            eprintln!("flea: the updater could not be started, so nothing was updated");
             FAILED
         }
     }
+}
+
+fn on_path(program: &str) -> bool {
+    std::env::var_os("PATH")
+        .map(|path| std::env::split_paths(&path).any(|dir| dir.join(program).is_file()))
+        .unwrap_or(false)
 }
 
 fn investigate() -> Report {

@@ -88,6 +88,16 @@ fn missing_or_unknown_language_is_english_and_missing_keys_stay_identifiable() {
 }
 
 #[test]
+fn a_box_without_a_shell_roster_still_names_every_language() {
+    let f = Fixture::new();
+    // No registry written: the shell is absent, which is the plain-desktop case.
+    let i = I18n::load(f.paths());
+    assert_eq!(i.language(), "en");
+    assert!(i.roster().iter().any(|locale| locale.code == "de"));
+    assert!(i.roster().iter().any(|locale| locale.code == "ar" && locale.right_to_left));
+}
+
+#[test]
 fn selected_catalogs_layer_over_source_with_per_string_and_english_plural_fallback() {
     let f = Fixture::new();
     f.registry();
@@ -200,9 +210,10 @@ fn omarchy_references_draw_english_words_without_omarchy_catalogs() {
     assert_eq!(english.matches("\"omarchy:").count(), OMARCHY_REFERENCES.len(), "every omarchy: reference is pinned here");
     let f = Fixture::new();
     f.write("config/omarchy/language", "de");
-    // No Omarchy root at all, as on 4.0.x: no locales.json, so the roster is English only and the locale stays en.
+    // No Omarchy root at all: the bundled roster still knows de, while no Omarchy catalog supplies
+    // a translated word, so every reference draws its English fallback.
     let i = I18n::load(f.paths());
-    assert_eq!(i.language(), "en");
+    assert_eq!(i.language(), "de");
     for (key, word) in OMARCHY_REFERENCES {
         assert_eq!(i.tr(key), word, "{key}");
     }

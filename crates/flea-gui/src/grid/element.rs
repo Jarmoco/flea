@@ -252,9 +252,9 @@ impl GridState {
             quiet: false,
         }
     }
-    /// Omarchy's default face until the pane follows the live font-set.
+    /// Generic fallback face until the pane follows the live font-set.
     pub fn omarchy_default() -> Self {
-        Self::new(font("JetBrainsMono Nerd Font"))
+        Self::new(font("monospace"))
     }
 
     /// Takes a new catalog's drop labels; a change drops their shaped lines so the next frame shapes the new words once.

@@ -92,8 +92,7 @@ pub struct Theme {
 }
 impl Theme {
     pub fn path() -> std::path::PathBuf {
-        std::env::var_os("HOME").filter(|s| !s.is_empty()).map(std::path::PathBuf::from)
-            .map(|home| home.join(".local/state/omarchy/current/theme/colors.toml")).unwrap_or_default()
+        flea::themedir::env_colors_path().unwrap_or_default()
     }
     #[cfg(test)]
     pub fn load() -> Self { Self::from_text(&read(&Self::path()).unwrap_or_default()) }

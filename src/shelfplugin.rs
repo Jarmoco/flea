@@ -112,8 +112,21 @@ fn rescan() {
     let _ = Command::new("omarchy-shell").args(["shell", "rescanPlugins"]).output();
 }
 
+// The shelf is a plugin of the Omarchy bar, so a desktop without that shell has nowhere to install it.
+pub fn desktop_shell_installed() -> bool {
+    std::env::var_os("OMARCHY_PATH").is_some_and(|value| !value.is_empty())
+        || Path::new("/usr/share/omarchy").is_dir()
+}
+
 // The switch itself, both ways.
 pub fn sync(enabled: bool) -> Result<(), String> {
+    if !desktop_shell_installed() {
+        return if enabled {
+            Err("the shelf is an Omarchy bar plugin, and this desktop has no Omarchy shell".to_string())
+        } else {
+            Ok(())
+        };
+    }
     let dest = installed()?;
     if !enabled {
         // Never installed here means nothing to disable, and asking would only print a refusal.
@@ -133,7 +146,7 @@ pub fn sync(enabled: bool) -> Result<(), String> {
 // Startup, where the copy is refreshed after an upgrade shipped a new plugin under an old switch.
 // A switch that is off owns no copy, so there is nothing to carry forward.
 pub fn refresh(enabled: bool) -> Result<(), String> {
-    if !enabled {
+    if !enabled || !desktop_shell_installed() {
         return Ok(());
     }
     let (dest, source) = (installed()?, source());

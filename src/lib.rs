@@ -28,6 +28,7 @@ pub mod qscrash;
 pub mod preview_model;
 pub mod rawname;
 pub mod theme;
+pub mod themedir;
 pub mod ui_logic_fb1;
 pub mod ui_logic_dg1;
 pub mod ui_logic_dg2;

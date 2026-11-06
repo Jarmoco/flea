@@ -14,7 +14,7 @@ use gpui::{AppContext, Context, TestAppContext, TestDispatcher, Window, WindowHa
 use std::sync::Arc;
 
 const FAMILY: &str = "Font Gate Mono";
-const FALLBACK: &str = "JetBrainsMono Nerd Font";
+const FALLBACK: &str = "monospace";
 const SECOND: &str = "Font Gate Second";
 type Handle = WindowHandle<Root>;
 

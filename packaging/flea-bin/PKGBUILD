@@ -6,12 +6,12 @@ pkgname=flea-bin
 _pkgname=flea
 pkgver=0.4.0
 pkgrel=1
-pkgdesc='Fast, keyboard-first file manager for Omarchy (prebuilt binary)'
+pkgdesc='Fast, keyboard-first file manager for Linux desktops (prebuilt binary)'
 arch=('x86_64' 'aarch64')
 url='https://github.com/thisisgm/flea'
 license=('Apache-2.0' 'BSD-2-Clause' 'BSD-3-Clause' 'CC0-1.0' 'ISC' 'MIT' 'MPL-2.0' 'Unicode-3.0' 'Zlib')
 # The root PKGBUILD's depends and optdepends in its order, which says what uses each; verify refuses a tag where they differ.
-depends=('bat' 'bubblewrap' 'expect' 'fontconfig' 'gcc-libs' 'gdk-pixbuf2' 'glib2' 'glibc' 'gvfs' 'gvfs-afc' 'gvfs-dnssd' 'gvfs-gphoto2' 'gvfs-mtp' 'gvfs-nfs' 'gvfs-smb' 'hicolor-icon-theme' 'jq' 'libglvnd' 'libheif' 'libxcb' 'libxkbcommon' 'libxkbcommon-x11' 'mpv' 'omarchy' 'poppler-glib' 'python' 'python-gobject' 'quickjs-ng' 'qt6-declarative' 'qt6-webengine' 'ripgrep' 'shared-mime-info' 'udisks2' 'usbmuxd' 'util-linux' 'vulkan-driver' 'vulkan-icd-loader' 'wayland' 'wl-clipboard' 'xdg-terminal-exec' 'xdg-utils')
+depends=('bat' 'bubblewrap' 'expect' 'fontconfig' 'gcc-libs' 'gdk-pixbuf2' 'glib2' 'glibc' 'gvfs' 'gvfs-afc' 'gvfs-dnssd' 'gvfs-gphoto2' 'gvfs-mtp' 'gvfs-nfs' 'gvfs-smb' 'hicolor-icon-theme' 'jq' 'libglvnd' 'libheif' 'libxcb' 'libxkbcommon' 'libxkbcommon-x11' 'mpv' 'poppler-glib' 'python' 'python-gobject' 'quickjs-ng' 'qt6-declarative' 'qt6-webengine' 'ripgrep' 'shared-mime-info' 'udisks2' 'usbmuxd' 'util-linux' 'vulkan-driver' 'vulkan-icd-loader' 'wayland' 'wl-clipboard' 'xdg-terminal-exec' 'xdg-utils')
 optdepends=('7zip: 7z archive support'
             'dropbox-cli: Dropbox browsing and share links'
             'ffmpeg: media metadata previews'
@@ -19,6 +19,7 @@ optdepends=('7zip: 7z archive support'
             'imagemagick: image conversion'
             'libarchive: archive listing and extraction'
             'libreoffice: office document previews'
+            'omarchy: Hyprland key bindings, the bar shelf, Omarchy themes and its updater'
             'tailscale: Taildrop sharing'
             'zoxide: frecent folders in the folder jump of the path bar')
 provides=("$_pkgname=$pkgver")
@@ -68,9 +69,4 @@ package() {
   # The package's own version on the copy, which is what the switch compares with the user's.
   sed -i "s/^  \"version\": \"[^\"]*\",\$/  \"version\": \"$pkgver-$pkgrel\",/" "$pkgdir/usr/share/flea/shelf/manifest.json"
   grep -qF "  \"version\": \"$pkgver-$pkgrel\"," "$pkgdir/usr/share/flea/shelf/manifest.json" || { echo "$pkgname: /usr/share/flea/shelf/manifest.json does not carry the version $pkgver-$pkgrel" >&2; return 1; }
-  # Omarchy's own Commons and Ui, reached as qs.Commons, linked into both config roots the entries use.
-  ln -s /usr/share/omarchy/shell/Commons "$pkgdir/usr/share/flea/ui/Commons"
-  ln -s /usr/share/omarchy/shell/Ui "$pkgdir/usr/share/flea/ui/Ui"
-  ln -s /usr/share/omarchy/shell/Commons "$pkgdir/usr/share/flea/ui/boot/Commons"
-  ln -s /usr/share/omarchy/shell/Ui "$pkgdir/usr/share/flea/ui/boot/Ui"
 }

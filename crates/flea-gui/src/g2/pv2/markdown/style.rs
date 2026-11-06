@@ -120,8 +120,8 @@ pub struct Faces {
 impl Faces {
     pub fn omarchy_default() -> Self {
         Faces {
-            family: "JetBrainsMono Nerd Font".into(),
-            symbol: "Noto Sans Symbols 2".into(),
+            family: "monospace".into(),
+            symbol: "sans-serif".into(),
         }
     }
 

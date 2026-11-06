@@ -5,7 +5,7 @@
 <h1 align="center">Flea</h1>
 
 <p align="center">
-  <strong>The fastest GUI file manager on Omarchy.</strong>
+  <strong>A fast, keyboard-first file manager for Linux.</strong>
 </p>
 
 <p align="center">
@@ -33,20 +33,23 @@
 - **Devices.** USB and encrypted drives, phones and cameras, mounted from the sidebar.
 - **Disk images.** Write an ISO or IMG to a USB drive, even compressed or zipped, and verify every byte.
 - **Desktop integration.** Default file manager, “Show in folder” and Open/Save dialogs.
-- **Your settings.** Omarchy text sizes, configurable menus, and Default, Vim, Mac or Windows keys.
+- **Your settings.** Theme-aware text sizes, configurable menus, and Default, Vim, Mac or Windows keys.
 
 ## Install
 
-Flea is available only from the Omarchy Package Repository. Install it and make it your default
-file manager, file chooser and the app opened by **Super+Shift+F**:
+Flea is published in the Omarchy Package Repository. On Omarchy, install it and make it your
+default file manager, file chooser and the app opened by **Super+Shift+F**:
 
 ```bash
 omarchy pkg add flea && flea --default
 ```
 
-Run `flea --default` from a terminal in your session so file dialogs switch at once. `flea --default off`
-undoes it, and Settings > About has the same switch. To try Flea without changing your defaults, run
-only `omarchy pkg add flea`. Updates come with `omarchy update`.
+On any other Linux desktop, build it from source with the command under [Build](#build); Flea runs
+without Omarchy, and picks up Omarchy's themes, key bindings, bar shelf and updater when that desktop
+is present. Run `flea --default` from a terminal in your session so file dialogs switch at once.
+`flea --default off` undoes it, and Settings > About has the same switch. To try Flea without
+changing your defaults, install the package and do not run `flea --default`. Updates come with
+`omarchy update` on Omarchy.
 
 On an AUR `flea-bin` or `flea-git` install, run this and answer `y` when pacman asks to remove it:
 
@@ -105,8 +108,8 @@ Drag a file into a terminal to paste its path.
   <img src="docs/images/iphone.png" width="49%" alt="An iPhone camera roll browsed over AFC, with HEIC thumbnails and a preview">
 </p>
 
-**Transparency** follows Omarchy's Window Transparency (Trigger > Appearance > Window
-Transparency). To set Flea's own, give a value from 0 to 1 in a theme's `shell.toml`, or in
+**Transparency** follows the theme's `shell.toml`. Put a value from 0 to 1 in Flea's own
+`~/.config/flea/shell.toml`, in the selected theme's `shell.toml`, or, on Omarchy, in
 `~/.config/omarchy/shell.toml` for every theme:
 
 ```toml
@@ -206,8 +209,9 @@ See [the full key table](keys.toml) for preset bindings and pointer actions.
 
 ## Build
 
-Requires Omarchy and Rust. See
-[installation details](docs/install.md) for runtime and optional dependencies.
+Requires Rust and a C toolchain, plus the runtime libraries listed under `depends` and
+`optdepends` in the [PKGBUILD](PKGBUILD). Omarchy is supported when it is present but is not
+required. See [installation details](docs/install.md) for runtime and optional dependencies.
 
 ```bash
 cargo build --locked --release --workspace

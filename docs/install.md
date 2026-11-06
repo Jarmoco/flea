@@ -1,7 +1,10 @@
 # Installing Flea
 
-Flea is for Omarchy: `omarchy` and `quickshell` are hard dependencies, so it will not install on a
-plain Arch box.
+Flea builds on any Linux desktop with Rust and runs with the libraries listed in the
+[PKGBUILD](../PKGBUILD). Omarchy is optional: when it is installed Flea reads its themes, claims its
+Hyprland file-manager keys, drives its bar shelf and hands updates to its updater. Without it Flea
+uses its own palette under `~/.config/flea`, and every Omarchy-only step is skipped rather than
+failed.
 
 Flea installs as an Arch package, so pacman owns both ends: `makepkg -si` puts it on, `pacman -Rns`
 takes it off, and pacman's own file list is what makes the second claim provable. There is no
@@ -13,8 +16,7 @@ below.
 
 ## Which package?
 
-Flea is available only from the Omarchy Package Repository, as `flea`. It needs Omarchy, and the
-AUR accepts only packages that work on a plain Arch install, so Flea has no AUR package.
+On Omarchy, Flea is available from the Omarchy Package Repository as `flea`:
 
 ```
 omarchy pkg add flea
@@ -25,9 +27,14 @@ compiles on your machine. `omarchy update` keeps it current: a release arrives a
 it ships, once Omarchy has reviewed and built it. Omarchy refuses `yay -Syu` and `pacman -Syu`;
 `omarchy update` is the update command.
 
-**Moving from the AUR.** Earlier releases were also on the AUR as `flea-bin`, `flea-git` and a
-source-built `flea`. To move from `flea-bin` or `flea-git`, run the interactive command and answer
-`y` when pacman asks whether to remove the AUR package:
+On another Arch-based desktop, build the repository's `PKGBUILD` locally with the commands under
+[Build and install](#build-and-install). `omarchy` is an optional dependency, so pacman no longer
+pulls the desktop shell in. On a non-Arch distribution, build the workspace with
+`cargo build --locked --release --workspace` and install the files from the `Makefile`.
+
+**Moving from the AUR on Omarchy.** Earlier releases were also on the AUR as `flea-bin`, `flea-git`
+and a source-built `flea`. To move from `flea-bin` or `flea-git`, run the interactive command and
+answer `y` when pacman asks whether to remove the AUR package:
 
 ```
 sudo pacman -S flea
@@ -70,9 +77,8 @@ so commit an edit before you build it.
 | Path | What it is |
 |---|---|
 | `/usr/bin/flea` | the binary, backend and launcher both |
-| `/usr/share/flea/ui/` | the Quickshell UI, which `paths.rs` looks for by `boot/shell.qml` |
-| `/usr/share/flea/ui/Commons`, `/usr/share/flea/ui/Ui` | symlinks into `/usr/share/omarchy/shell/`, reached from QML as `qs.Commons` |
-| `/usr/share/flea/i18n/<code>/flea.json` | the translation catalogs, one per Omarchy language, which `src/i18n/mod.rs` reads |
+| `/usr/share/flea/ui/` | the QML assets and JavaScript helpers, which `paths.rs` looks for by `boot/shell.qml` |
+| `/usr/share/flea/i18n/<code>/flea.json` | the translation catalogs, which `src/i18n/mod.rs` reads |
 | `/usr/lib/flea/flea-portal` | the XDG portal backend, which answers `org.freedesktop.impl.portal.FileChooser` |
 | `/usr/lib/flea/flea-filemanager1` | the D-Bus service, which answers `org.freedesktop.FileManager1` for "Show in folder" |
 | `/usr/share/dbus-1/services/com.thisisgm.flea.FileManager1.service` | what D-Bus activates that with |
@@ -88,8 +94,17 @@ so commit an edit before you build it.
 The count is whatever the built archive declares, not a number written down here: the UI grows a file
 whenever a component is added, so a figure pinned in this paragraph would be stale by the next commit.
 `packaging/flea-package-test` reads the count out of the archive and fails if the fake root does not
-hold exactly that many. The two symlinks are why `omarchy` is a hard dependency: they point into a
-directory that package owns.
+hold exactly that many.
+
+## Themes and language without Omarchy
+
+With no Omarchy theme installed, Flea reads its palette from `~/.config/flea/colors.toml`, its
+display settings from `~/.config/flea/shell.toml`, and its language code from
+`~/.config/flea/language`. When Omarchy is present, its current theme is used unless a theme is
+chosen explicitly. Name one with `FLEA_THEME=<name>` or by writing the name to
+`~/.config/flea/theme`; themes are looked for in `~/.config/flea/themes`, `/usr/share/flea/themes`,
+and Omarchy's own collections. `FLEA_THEME=desktop` follows Omarchy's current theme and
+`FLEA_THEME=flea` uses Flea's own directory. `FLEA_THEME_DIR` names a theme directory outright.
 
 ## An iPhone's tethering connection
 
@@ -129,9 +144,9 @@ matters when Flea is leaving for good.
 
 Installing registers Flea for `inode/directory` and for `org.freedesktop.FileManager1`; it makes
 Flea the answer for neither, because another file manager is registered for both, and it does not
-touch Omarchy's file-manager keys. All of those are per-user preferences, so pacman cannot own them, and
-Omarchy's own `default` verbs (`omarchy default browser`, `editor`, `terminal`) set exactly this
-kind of thing without a package's help. There is no `omarchy default filemanager`, and
+touch the desktop's existing keys. All of those are per-user preferences, so pacman cannot own them,
+and a desktop shell's own `default` verbs (`omarchy default browser`, `editor`, `terminal`) set
+exactly this kind of thing without a package's help. There is no `omarchy default filemanager`, and
 `/usr/share/omarchy/` is the package's to overwrite, so Flea carries the verb itself:
 
 ```
@@ -178,23 +193,26 @@ take one to name which program and here the program is Flea. The files it writes
    with no `com.thisisgm.flea.FileManager1.service` installed has nothing to put in front and this
    step refuses instead of naming a path that is not there.
 
-3. **Omarchy's two file-manager keys.** `SUPER + SHIFT + F` and `SUPER + ALT + SHIFT + F` are bound
-   to Nautilus in `/usr/share/omarchy/default/hypr/bindings/applications.lua`, which
-   `omarchy update` overwrites, so the override goes where the Omarchy manual says an override
-   goes: appended to `~/.config/hypr/bindings.lua`, between two marker lines, in the manual's own
-   `hl.unbind` then `o.bind` shape:
+3. **The two Hyprland file-manager keys.** `SUPER + SHIFT + F` and `SUPER + ALT + SHIFT + F` are
+   bound to Nautilus on Omarchy, in `/usr/share/omarchy/default/hypr/bindings/applications.lua`,
+   which `omarchy update` overwrites, so the override goes where the Omarchy manual says an
+   override goes: appended to `~/.config/hypr/bindings.lua`, between two marker lines, in the
+   manual's own `hl.unbind` then `o.bind` shape:
 
    ```lua
    -- flea --default: begin. Written by `flea --default`; `flea --default off` removes the block whole.
    hl.unbind("SUPER + SHIFT + F")
    o.bind("SUPER + SHIFT + F", "File manager", { launch = 'flea --gui' })
    hl.unbind("SUPER + ALT + SHIFT + F")
-   o.bind("SUPER + ALT + SHIFT + F", "File manager (cwd)", { launch = 'flea --gui "$(omarchy-cmd-terminal-cwd)"' })
+   o.bind("SUPER + ALT + SHIFT + F", "File manager (cwd)", { launch = 'flea --gui "$(omarchy-cmd-terminal-cwd 2>/dev/null || pwd)"' })
    -- flea --default: end.
    ```
 
-   The cwd key keeps its meaning: `omarchy-cmd-terminal-cwd` is the helper Omarchy's own Nautilus
-   binding reads the active terminal's directory with, and Flea's positional argument is a path.
+   This step is skipped, not failed, on a desktop with no `~/.config/hypr/bindings.lua`: Flea says
+   so and the other steps still stand. The cwd key keeps its meaning on Omarchy:
+   `omarchy-cmd-terminal-cwd` is the helper Omarchy's own Nautilus binding reads the active
+   terminal's directory with, and where that helper is absent the binding falls back to the
+   launcher's working directory. Flea's positional argument is a path.
    After writing, `hyprctl reload` runs and `hyprctl configerrors` is read; if the config no longer
    loads, the file is put back as it was and the command fails saying what `configerrors` said. The
    output names what each key ran before, read off `hyprctl binds`. From outside the session,

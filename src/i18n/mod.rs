@@ -37,17 +37,23 @@ fn catalog_dirs(override_dir: Option<PathBuf>, exe: Option<&Path>, source: &Path
     catalogs
 }
 
-// Sample input: "de\n" selects de; only the first line of Omarchy's language file is used.
+// Sample input: "de\n" selects de; only the first line of the language file is used.
 fn language_code(text: &str) -> &str {
     text.lines().next().unwrap_or("").trim()
 }
 
 impl Default for Paths {
     fn default() -> Self {
-        let config = env_path("XDG_CONFIG_HOME").or_else(|| env_path("HOME").map(|p| p.join(".config")));
-        let language_file = env_path("OMARCHY_LANGUAGE_FILE").unwrap_or_else(|| {
-            config.unwrap_or_else(|| PathBuf::from("/nonexistent")).join("omarchy/language")
-        });
+        let config = env_path("XDG_CONFIG_HOME")
+            .or_else(|| env_path("HOME").map(|p| p.join(".config")))
+            .unwrap_or_else(|| PathBuf::from("/nonexistent"));
+        // Flea keeps its own language choice; a desktop shell's file is read only
+        // while Flea has none, so an unconfigured box still inherits the shell's.
+        let own = config.join("flea/language");
+        let language_file = env_path("FLEA_LANGUAGE_FILE")
+            .or_else(|| own.is_file().then_some(own))
+            .or_else(|| env_path("OMARCHY_LANGUAGE_FILE"))
+            .unwrap_or_else(|| config.join("omarchy/language"));
         let exe = std::env::current_exe().ok();
         let catalogs = catalog_dirs(env_path("FLEA_I18N"), exe.as_deref(), Path::new(env!("CARGO_MANIFEST_DIR")), cfg!(debug_assertions));
         Self {
@@ -56,6 +62,9 @@ impl Default for Paths {
         }
     }
 }
+
+/// The locale roster Flea ships, used when no desktop shell installed one.
+const BUNDLED_ROSTER: &str = include_str!("fixtures/locales.json");
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct Stamp {
@@ -252,7 +261,12 @@ impl I18n {
         // Stamp before reading so a concurrent edit remains visible to the next poll.
         let language_file = self.watch(self.paths.language_file.clone());
         let registry = self.watch(self.paths.omarchy.join("default/i18n/locales.json"));
-        self.roster = locale::parse(&catalog::read(&registry).unwrap_or_default(), &registry);
+        // A Linux desktop need not install the shell's roster; Flea's bundled one
+        // names the same languages so the picker still works on a plain box.
+        let roster_text = catalog::read(&registry)
+            .filter(|text| !text.trim().is_empty())
+            .unwrap_or_else(|| BUNDLED_ROSTER.to_owned());
+        self.roster = locale::parse(&roster_text, &registry);
         self.language_text = catalog::read(&language_file);
         let code = language_code(self.language_text.as_deref().unwrap_or_default());
         self.locale = self.roster.iter().find(|l| l.code == code).cloned()

@@ -51,8 +51,9 @@ pub struct Service {
     _stop: Arc<Stop>,
 }
 
-/// The face a launch draws until fc-match answers: gpui finds no face named `monospace` and falls to sans, so this is Omarchy's default.
-pub(super) const FALLBACK_FAMILY: &str = "JetBrainsMono Nerd Font";
+/// The face a launch draws until fc-match answers: the generic family every
+/// fontconfig host resolves, so no distribution's patched face is required.
+pub(super) const FALLBACK_FAMILY: &str = "monospace";
 /// How often the worker stats its inputs when no folder event woke it; the hung-probe test counts its margin in these.
 pub(super) const TICK: Duration = Duration::from_millis(500);
 

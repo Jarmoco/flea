@@ -36,8 +36,3 @@ install:
 # The package's own version on the copy, so every build and rebuild replaces the user's (docs/release.md).
 	sed -i "s/^  \"version\": \"[^\"]*\",\$$/  \"version\": \"$(VERSION)\",/" "$(DESTDIR)/usr/share/flea/shelf/manifest.json"
 	grep -qF "  \"version\": \"$(VERSION)\"," "$(DESTDIR)/usr/share/flea/shelf/manifest.json" || { echo "flea: /usr/share/flea/shelf/manifest.json does not carry the version $(VERSION)" >&2; exit 1; }
-# Omarchy's own Commons and Ui, in ui and in ui/boot, because qs.Commons resolves against the config root ui/boot launches from.
-	ln -sfn /usr/share/omarchy/shell/Commons "$(DESTDIR)/usr/share/flea/ui/Commons"
-	ln -sfn /usr/share/omarchy/shell/Ui "$(DESTDIR)/usr/share/flea/ui/Ui"
-	ln -sfn /usr/share/omarchy/shell/Commons "$(DESTDIR)/usr/share/flea/ui/boot/Commons"
-	ln -sfn /usr/share/omarchy/shell/Ui "$(DESTDIR)/usr/share/flea/ui/boot/Ui"

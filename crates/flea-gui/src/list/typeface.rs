@@ -14,7 +14,7 @@ pub struct Typeface {
 impl Typeface {
     pub fn omarchy_default() -> Self {
         Self {
-            font: font("JetBrainsMono Nerd Font"),
+            font: font("monospace"),
             base: px(14.),
             body: px(14.),
             body_small: px(13.),
