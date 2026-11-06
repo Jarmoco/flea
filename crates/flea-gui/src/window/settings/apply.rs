@@ -387,9 +387,21 @@ fn configure_pane(
     let mut list = host.list.borrow_mut();
     list.view
         .set_lang_marks(data.get("langMarks").and_then(Json::as_bool) != Some(false));
+    list.view.icon_theme = data
+        .get("iconTheme")
+        .and_then(Json::as_str)
+        .unwrap_or("")
+        .to_owned();
     list.density = crate::list::Density::parse(pages::word(data, &["density"], "compact"));
     list.set_typeface(typeface);
     host.pane.set_row_height(list.file_metrics().row);
+    if let Some(grid) = &mut host.grid {
+        grid.view.icon_theme = data
+            .get("iconTheme")
+            .and_then(Json::as_str)
+            .unwrap_or("")
+            .to_owned();
+    }
 }
 
 fn view_kind(name: &str) -> View {

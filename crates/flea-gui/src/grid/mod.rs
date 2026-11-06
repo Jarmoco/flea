@@ -120,6 +120,7 @@ pub struct Counters {
 /// The grid's own state beside the pane: size, zoom, scroll and the landing wait; rows, cursor and selection stay with their owners.
 #[derive(Clone, Debug, PartialEq)]
 pub struct GridView {
+    pub icon_theme: String,
     pub metrics: Metrics,
     pub density: Density,
     pub thumb: ThumbSize,
@@ -144,6 +145,7 @@ pub struct GridView {
 impl GridView {
     pub fn new(metrics: Metrics, size: (f32, f32)) -> Self {
         Self {
+            icon_theme: String::new(),
             metrics,
             density: Density::default(),
             thumb: ThumbSize::MEDIUM,

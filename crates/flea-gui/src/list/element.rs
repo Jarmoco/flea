@@ -280,6 +280,8 @@ impl Element for ListElement {
                 });
                 continue;
             };
+            let icon = if facts.dir { "folder" } else { &facts.icon };
+            crate::icon_themes::request(&view.icon_theme, icon, metrics.mark.round().max(1.) as u32, window, cx);
             let drop = drop_box.and_then(|(at, _, _, cells)| cells.filter(|_| at == index));
             // A held clipboard or walk is looked up once per change or per entered row, never on a still frame.
             let resolve = || {

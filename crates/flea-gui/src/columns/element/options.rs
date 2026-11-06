@@ -5,6 +5,11 @@ use crate::grid::element::pictures::Pictures;
 use std::rc::Rc;
 
 impl TrackElement {
+    pub(crate) fn with_icon_theme(mut self, theme: &str) -> Self {
+        self.icon_theme = theme.to_owned();
+        self
+    }
+
     /// ColumnRow's language marks follow the List's langMarks setting.
     pub fn with_languages(mut self, languages: bool) -> Self {
         self.languages = languages;

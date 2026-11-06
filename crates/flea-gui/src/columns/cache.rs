@@ -28,6 +28,16 @@ impl Row<'_> {
         }
     }
 
+    pub fn icon_name(&self) -> &str {
+        if self.dir() {
+            return "folder";
+        }
+        match self {
+            Self::Peek(row) => &row.icon,
+            Self::Listing(row) => &row.icon,
+        }
+    }
+
     fn mark(&self, languages: bool) -> Mark {
         match self {
             Self::Peek(row) => Mark::for_file(&row.name, row.dir, 0, &row.icon, languages),

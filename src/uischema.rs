@@ -56,6 +56,7 @@ pub const DEFAULTS: &str = r#"{
   "keys": "default",
   "themeSeed": "",
   "themeOpacity": -1,
+  "iconTheme": "",
   "display": { "textSize": { "mode": "system" }, "hyprlandIcons": false },
   "menu": { "hidden": ["delete", "openTerminal", "placeMenu", "runScript",
             "moveto", "copyto", "properties", "permissions", "copyAs", "pasteAs",
@@ -77,6 +78,7 @@ pub const SIDEBAR_STOPS: [f64; 4] = [160.0, 192.0, 224.0, 256.0];
 pub enum Rule {
     Bool,
     SeedColor,
+    IconTheme,
     Word(&'static [&'static str]),
     // columns names what the list row SHOWS, so it holds each column key at most once and name always.
     Columns,
@@ -245,6 +247,7 @@ pub const SCHEMA: &[(&str, Rule)] = &[
     ("keys", Rule::Word(&["default", "vim", "mac", "windows"])),
     ("themeSeed", Rule::SeedColor),
     ("themeOpacity", Rule::Count(-1.0, 100.0)),
+    ("iconTheme", Rule::IconTheme),
     ("display", Rule::Group(DISPLAY)),
     ("menu", Rule::Group(MENU)),
     ("updates", Rule::Group(UPDATES)),
@@ -320,7 +323,7 @@ mod tests {
                 "startFolder",
                 "lastPath", "lastTabs", "newTab", "trashAutoEmpty", "trashSweptOn", "places", "shelf",
                 "preview", "previewFacts", "keys",
-                "themeSeed", "themeOpacity", "display", "menu", "updates", "plugins", "stateVersion"
+                "themeSeed", "themeOpacity", "iconTheme", "display", "menu", "updates", "plugins", "stateVersion"
             ]
         );
         assert_eq!(d.get(STATE_VERSION).and_then(Json::as_f64), Some(4.0), "a fresh document is already stamped");

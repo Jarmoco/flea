@@ -25,6 +25,10 @@ mod m9_g2rows_02;
 pub struct SettingsView {
     pub(super) editor: Editor,
     pub(super) theme_channel: usize,
+    pub(super) icon_page: bool,
+    pub(super) icon_index: usize,
+    pub(super) icon_catalog: Option<Vec<flea::icon_packs::PackPreview>>,
+    pub(super) icon_catalog_loading: bool,
     pub panel: Panel,
     pub focus: FocusHandle,
     pub typeface: Typeface,
@@ -40,6 +44,10 @@ impl SettingsView {
             panel,
             editor: Editor::default(),
             theme_channel: 0,
+            icon_page: false,
+            icon_index: 0,
+            icon_catalog: None,
+            icon_catalog_loading: false,
             plugins: None,
             probe: super::probe::Probe::default(),
             focus: cx.focus_handle(),
@@ -280,6 +288,8 @@ impl SettingsView {
 
     fn pane(&mut self, ink: &Ink, window: &Window, cx: &mut Context<Self>) -> Stateful<Div> {
         if self.panel.section == "theme" && !self.panel.searching() {
+            self.load_icon_catalog(cx);
+            if self.icon_page { return self.icon_picker(ink, window, cx); }
             return self.theme_pane(ink, cx);
         }
         if self.panel.section == "plugins" && !self.panel.searching() {

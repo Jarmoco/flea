@@ -44,7 +44,13 @@ pub(super) fn caption_line<'a>(
 }
 
 impl GridElement {
-    fn prepare(&self, state: &mut GridState, bounds: Bounds<Pixels>, window: &Window) {
+    fn prepare(
+        &self,
+        state: &mut GridState,
+        bounds: Bounds<Pixels>,
+        window: &Window,
+        cx: &mut App,
+    ) {
         let shown = self
             .shown
             .as_deref()
@@ -83,6 +89,11 @@ impl GridElement {
             let row = self.held.row(listing);
             let cell = layout.cell(scroll, at);
             let slot = layout.slot(cell);
+            if let Some(row) = row {
+                let name = if row.dir { "folder" } else { &row.icon };
+                let side = layout.mark(slot).width.round().max(1.) as u32;
+                crate::icon_themes::request(&view.icon_theme, name, side, window, cx);
+            }
             let clip = self.decor.clip_row(listing, row);
             let drop = self
                 .overlay
@@ -213,7 +224,7 @@ impl GridElement {
         origin: gpui::Point<Pixels>,
         ink: &Ink,
         window: &mut Window,
-        cx: &App,
+        cx: &mut App,
     ) {
         let layout = state.layout.as_ref().expect("prepaint laid the grid out");
         let cut = drawn.clip.as_ref().is_some_and(|clip| clip.cut);
@@ -227,26 +238,40 @@ impl GridElement {
                 pictures.record_paint(drawn.listing, at, window, painted);
             }
         } else {
-            let (key, data) = drawn.language.clone().unwrap_or_else(|| {
-                drawn
-                    .tile
-                    .as_ref()
-                    .map_or(crate::row::marks::Mark::File, |tile| tile.mark)
-                    .svg()
+            let themed = self.held.row(drawn.listing).is_some_and(|row| {
+                let name = if row.dir { "folder" } else { &row.icon };
+                let mark = layout.mark(drawn.slot);
+                crate::icon_themes::paint(
+                    &self.view.icon_theme,
+                    name,
+                    mark.width.round().max(1.) as u32,
+                    bounds_of(origin, mark),
+                    window,
+                    cx,
+                )
             });
-            let mark_ink = if drawn.cursor || drawn.selected {
-                ink.foreground
-            } else {
-                ink.muted_frame
-            };
-            let _ = window.paint_svg(
-                bounds_of(origin, layout.mark(drawn.slot)),
-                key,
-                Some(data),
-                TransformationMatrix::unit(),
-                mark_ink.opacity(dim),
-                cx,
-            );
+            if !themed {
+                let (key, data) = drawn.language.clone().unwrap_or_else(|| {
+                    drawn
+                        .tile
+                        .as_ref()
+                        .map_or(crate::row::marks::Mark::File, |tile| tile.mark)
+                        .svg()
+                });
+                let mark_ink = if drawn.cursor || drawn.selected {
+                    ink.foreground
+                } else {
+                    ink.muted_frame
+                };
+                let _ = window.paint_svg(
+                    bounds_of(origin, layout.mark(drawn.slot)),
+                    key,
+                    Some(data),
+                    TransformationMatrix::unit(),
+                    mark_ink.opacity(dim),
+                    cx,
+                );
+            }
         }
         let Some(tile) = drawn.tile.as_ref().filter(|_| !drawn.editing) else {
             return;
@@ -325,7 +350,7 @@ impl Element for GridElement {
     ) -> Ink {
         let theme = cx.try_global::<Theme>().copied().unwrap_or_default();
         let mut state = self.state.borrow_mut();
-        self.prepare(&mut state, bounds, window);
+        self.prepare(&mut state, bounds, window, cx);
         if state.shaped_labels.is_none() && state.drawn.iter().any(|drawn| drawn.drop.is_some()) {
             let size = px(state
                 .layout

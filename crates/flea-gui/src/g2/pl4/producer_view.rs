@@ -6,6 +6,17 @@ const WHEEL_ROW_FRACTION: f32 = 0.78;
 impl Render for Producer {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         self.load(cx);
+        cx.defer_in(window, |producer, window, cx| {
+            let theme = producer.state.get("iconTheme")
+                .and_then(flea::jsondoc::Json::as_str).unwrap_or("").to_owned();
+            let icons: Vec<_> = producer.laid.borrow().rows.iter()
+                .filter_map(|row| flea::icon_packs::sidebar_icon(row.glyph))
+                .collect();
+            let side = crate::g2::pl4::rows::icon_size(&producer.typeface);
+            for icon in icons {
+                crate::icon_themes::request(&theme, icon, side, window, cx);
+            }
+        });
         // Read this frame's painted viewport after layout has published its rows.
         let producer = cx.entity().downgrade();
         cx.defer(move |cx| {

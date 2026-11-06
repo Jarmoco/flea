@@ -11,6 +11,7 @@ pub mod feedback;
 mod font_gate;
 pub mod g2;
 pub mod grid;
+pub mod icon_themes;
 pub mod input;
 pub mod ipc;
 pub mod list;

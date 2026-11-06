@@ -155,6 +155,13 @@ pub(super) fn paint_icon(
         paint_mark(key, data, at, metrics.mark, ink.opacity(dim), window, cx);
         return (1, 0);
     }
+    if let Some(facts) = row {
+        let name = if facts.dir { "folder" } else { &facts.icon };
+        let bounds = Bounds::new(at, size(px(metrics.mark), px(metrics.mark)));
+        if crate::icon_themes::paint(&view.icon_theme, name, metrics.mark.round().max(1.) as u32, bounds, window, cx) {
+            return (1, 0);
+        }
+    }
     let mark = shown
         .prepared
         .as_ref()

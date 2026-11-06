@@ -15,6 +15,8 @@ pub(crate) mod glyphs;
 mod ime_tests;
 pub(crate) mod input;
 mod input_host;
+mod icon_catalog;
+mod icon_picker;
 mod theme;
 #[cfg(test)]
 mod keymap_sheet_activation_tests;

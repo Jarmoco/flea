@@ -92,6 +92,10 @@ impl RailMetrics {
     }
 }
 
+pub(crate) fn icon_size(face: &Typeface) -> u32 {
+    RailMetrics::for_typeface(face).icon.round().max(1.) as u32
+}
+
 #[cfg(test)]
 pub(crate) fn i18n_fit_widths(face: &Typeface) -> (f32, f32) {
     let metrics = RailMetrics::for_typeface(face);
@@ -183,6 +187,7 @@ impl Laid {
 #[derive(Default)]
 pub struct RowsModel {
     pub sections: Rc<Vec<DrawnSection>>,
+    pub icon_theme: String,
     pub cursor: Option<usize>,
     pub lit: Option<usize>,
     pub focused: bool,
@@ -293,6 +298,7 @@ impl RowsModel {
 
     /// Sidebar.qml's places flags: the Trash count and the drive sizes show only when set true.
     pub fn adopt_places(&mut self, state: &flea::jsondoc::Json) {
+        self.icon_theme = state.get("iconTheme").and_then(flea::jsondoc::Json::as_str).unwrap_or("").to_owned();
         let places = state.get("places");
         let flag = |key| {
             places

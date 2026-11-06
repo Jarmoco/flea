@@ -118,6 +118,7 @@ impl Element for RailElement {
                 super::paint::paint_ground(row, &model, &grounds, window);
                 super::paint::paint_mark(
                     row,
+                    &model.icon_theme,
                     &palette,
                     ready.digits[at].as_deref(),
                     &metrics,

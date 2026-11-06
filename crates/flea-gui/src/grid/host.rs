@@ -39,6 +39,11 @@ impl GridHost {
 
     fn new(size: (f32, f32), data: &Json) -> Self {
         let mut view = GridView::new(Metrics::board(), size);
+        view.icon_theme = data
+            .get("iconTheme")
+            .and_then(Json::as_str)
+            .unwrap_or("")
+            .to_owned();
         view.thumb = ThumbSize::named(
             data.get("preview")
                 .and_then(|v| v.get("thumbSize"))
@@ -52,9 +57,7 @@ impl GridHost {
         );
         Self {
             view,
-            state: Rc::new(RefCell::new(GridState::new(font(
-                "monospace",
-            )))),
+            state: Rc::new(RefCell::new(GridState::new(font("monospace")))),
             followed: None,
             refused: None,
             refusal: String::new(),

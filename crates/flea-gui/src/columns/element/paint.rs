@@ -121,18 +121,34 @@ impl TrackElement {
                                 pictures_painted += 1;
                             } else {
                                 let (mark_x, mark_y, mark) = mark_box();
-                                let (key, data) = prepared.mark.svg();
-                                let _ = window.paint_svg(
-                                    Bounds::new(
-                                        point(left + px(mark_x), top + px(mark_y)),
-                                        size(px(mark), px(mark)),
-                                    ),
-                                    key,
-                                    Some(data),
-                                    TransformationMatrix::unit(),
-                                    inks.mark,
-                                    cx,
+                                let mark_bounds = Bounds::new(
+                                    point(left + px(mark_x), top + px(mark_y)),
+                                    size(px(mark), px(mark)),
                                 );
+                                let themed = row_at(&view.rows, held, *index).is_some_and(|row| {
+                                    crate::icon_themes::paint(
+                                        &self.icon_theme,
+                                        row.icon_name(),
+                                        mark.round().max(1.) as u32,
+                                        mark_bounds,
+                                        window,
+                                        cx,
+                                    )
+                                });
+                                if !themed {
+                                    let (key, data) = prepared.mark.svg();
+                                    let _ = window.paint_svg(
+                                        Bounds::new(
+                                            point(left + px(mark_x), top + px(mark_y)),
+                                            size(px(mark), px(mark)),
+                                        ),
+                                        key,
+                                        Some(data),
+                                        TransformationMatrix::unit(),
+                                        inks.mark,
+                                        cx,
+                                    );
+                                }
                             }
                             let name = prepared.name_for(chevron, cursor);
                             let name_x = left + px(geometry.name_x);

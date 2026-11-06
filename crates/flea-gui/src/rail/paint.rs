@@ -46,6 +46,7 @@ pub(super) fn paint_ground(
 
 pub(super) fn paint_mark(
     row: &LaidRow,
+    icon_theme: &str,
     palette: &Palette,
     _digit: Option<&text::Prepared>,
     metrics: &RailMetrics,
@@ -87,6 +88,12 @@ pub(super) fn paint_mark(
             ));
         }
         RowMark::None => {
+            let bounds = Bounds::new(point(px(x), px(y)), size(px(metrics.icon), px(metrics.icon)));
+            if let Some(name) = flea::icon_packs::sidebar_icon(row.glyph) {
+                if crate::icon_themes::paint(icon_theme, name, metrics.icon.round().max(1.) as u32, bounds, window, cx) {
+                    return;
+                }
+            }
             if let Some((key, data)) = glyph::svg(row.glyph) {
                 let _ = window.paint_svg(
                     Bounds::new(

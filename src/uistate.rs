@@ -197,6 +197,7 @@ fn fits(rule: &Rule, value: &Json) -> bool {
     match rule {
         Rule::Bool => value.as_bool().is_some(),
         Rule::SeedColor => value.as_str().is_some_and(|s| s.is_empty() || crate::seed_theme::normalize(s).is_some()),
+        Rule::IconTheme => value.as_str().is_some_and(|s| s.len() <= 255 && s != "." && s != ".." && !s.contains('/') && !s.chars().any(char::is_control)),
         Rule::Word(words) => value.as_str().map(|s| words.contains(&s)).unwrap_or(false),
         Rule::Columns => is_column_set(value),
         Rule::Favourites => value.as_array().is_some(),

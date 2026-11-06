@@ -36,6 +36,7 @@ pub struct TrackElement {
     paint: Rc<RefCell<TrackPaint>>,
     words: Rc<crate::row::format::Words>,
     languages: bool,
+    icon_theme: String,
     shown: Option<Rc<[usize]>>,
     tag_slot: bool,
     locating: bool,
@@ -68,6 +69,7 @@ impl TrackElement {
             paint,
             words,
             languages: true,
+            icon_theme: String::new(),
             shown: None,
             tag_slot: false,
             locating: false,
@@ -221,6 +223,15 @@ impl Element for TrackElement {
         for position in first..last.max(first) {
             let index = self.shown.as_ref().map_or(position, |rows| rows[position]);
             let row = row_at(&view.rows, held, index);
+            if let Some(row) = row {
+                crate::icon_themes::request(
+                    &self.icon_theme,
+                    row.icon_name(),
+                    mark_box().2.round().max(1.) as u32,
+                    window,
+                    cx,
+                );
+            }
             let mark = match (clip, row) {
                 (Some(clip), Some(row)) => clip.mark(&view.path, row.name()),
                 _ => Clip::None,

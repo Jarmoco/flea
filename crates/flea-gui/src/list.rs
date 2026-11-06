@@ -156,6 +156,7 @@ pub struct ListView {
     pub switched: Switched,
     pub stored: StoredWidths,
     pub lang_marks: bool,
+    pub icon_theme: String,
     pub tags_shown: bool,
     /// A filter or search's needle, whose run each name marks.
     pub query: String,
@@ -189,6 +190,7 @@ impl Default for ListView {
             switched: Switched::default(),
             stored: StoredWidths::default(),
             lang_marks: true,
+            icon_theme: String::new(),
             tags_shown: false,
             query: String::new(),
             searching: false,
@@ -215,6 +217,7 @@ impl ListView {
         self.switched = Switched::from_settings(data);
         self.stored = StoredWidths::from_settings(data);
         self.set_lang_marks(lang_marks(data));
+        self.icon_theme = data.get("iconTheme").and_then(Json::as_str).unwrap_or("").to_owned();
         self.today = (data.get("highlightToday").and_then(Json::as_bool) == Some(true))
             .then_some(today_start);
     }

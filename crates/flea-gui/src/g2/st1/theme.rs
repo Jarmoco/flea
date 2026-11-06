@@ -64,10 +64,17 @@ impl SettingsView {
         {
             return false;
         }
+        if self.icon_page {
+            return self.icon_picker_key(event, cx);
+        }
         match event.keystroke.key.as_str() {
             "up" | "k" => self.theme_channel = self.theme_channel.saturating_sub(1),
-            "down" | "j" => self.theme_channel = (self.theme_channel + 1).min(4),
+            "down" | "j" => self.theme_channel = (self.theme_channel + 1).min(5),
             "enter" | "space" if self.theme_channel == 4 => self.reset_theme(cx),
+            "enter" | "space" if self.theme_channel == 5 => {
+                self.icon_page = true;
+                self.icon_index = 0;
+            }
             "left" | "h" if self.theme_channel < 4 => {
                 let v = self.values()[self.theme_channel].saturating_sub(1);
                 self.set_channel(self.theme_channel, v, cx);
@@ -181,6 +188,35 @@ impl SettingsView {
                     .child(SharedString::from(error.resolve(&self.panel.catalog))),
             );
         }
+        pane = pane.child(
+            div()
+                .id("icon-picker-open")
+                .self_start()
+                .cursor_pointer()
+                .border_1()
+                .border_color(
+                    if self.panel.side == Side::Pane && self.theme_channel == 5 {
+                        ink.accent_frame
+                    } else {
+                        ink.muted_frame
+                    },
+                )
+                .px(px(s.of(12.)))
+                .py(px(s.of(6.)))
+                .child(SharedString::from(
+                    self.panel.catalog.tr("settings.theme.icons"),
+                ))
+                .on_mouse_down(
+                    MouseButton::Left,
+                    cx.listener(|view, _, window, cx| {
+                        view.panel.side = Side::Pane;
+                        view.icon_page = true;
+                        view.icon_index = 0;
+                        window.focus(&view.focus, cx);
+                        cx.notify();
+                    }),
+                ),
+        );
         pane.child(
             div()
                 .id("theme-reset")

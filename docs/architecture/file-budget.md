@@ -1663,3 +1663,9 @@ CTL2 RC2 ruling (2026-11-02) records `src/tui/cells.rs` at 428 for the approved 
 The seed theme setting moves the scoped ceilings for `src/uischema.rs` to 625 and `src/uistate.rs` to 857 lines, re-derived with `wc -l`, for its default and RGB validation. The global limits are unchanged.
 
 The theme opacity preference moves the scoped ceiling for src/uischema.rs to 627 lines, re-derived with wc -l; the global limit is unchanged.
+
+The saved icon-theme preference raises the scoped ceilings for src/uischema.rs to 630 and src/uistate.rs to 858 lines, re-derived with wc -l. The global limits are unchanged.
+
+The icon theme setting moves the scoped ceiling for crates/flea-gui/src/window/settings/apply.rs to 403 lines for the per-pane preference, re-derived with wc -l.
+
+The Grid and Columns icon-theme integration records exact ceilings of 468 lines for crates/flea-gui/src/grid/element/paint.rs and 414 for crates/flea-gui/src/window/settings/apply.rs, re-derived with wc -l after formatting; global limits stay unchanged.

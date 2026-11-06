@@ -23,6 +23,14 @@ impl Shell {
         cx: &mut Context<Self>,
     ) -> Option<AnyElement> {
         self.advance_columns_scroll(side, window, cx);
+        let icon_theme = self
+            .launch
+            .settings
+            .data
+            .get("iconTheme")
+            .and_then(flea::jsondoc::Json::as_str)
+            .unwrap_or("")
+            .to_owned();
         let theme = cx
             .try_global::<crate::palette::Theme>()
             .copied()
@@ -147,7 +155,8 @@ impl Shell {
                 paint,
                 Rc::clone(&words),
             )
-            .with_languages(languages);
+            .with_languages(languages)
+            .with_icon_theme(&icon_theme);
             element = element.with_tag_slot(view.slot == Slot::Active && tag_slot);
             if view.slot == Slot::Active {
                 element = element

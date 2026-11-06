@@ -17,3 +17,7 @@ mod place_edge_tests;
 mod service_tests;
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+#[path = "../../rail/icon_theme_tests.rs"]
+mod icon_theme_tests;
