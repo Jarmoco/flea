@@ -123,6 +123,22 @@ pub(crate) fn mount(window: &Window, appearance: WindowBackgroundAppearance, cx:
     );
 }
 
+pub(crate) fn change_appearance(window: &Window, cx: &App, appearance: WindowBackgroundAppearance) {
+    if let Some(windows) = cx.try_global::<Windows>() {
+        if let Some(mounted) = windows
+            .0
+            .borrow_mut()
+            .get_mut(&window.window_handle().window_id())
+        {
+            let clear = appearance != WindowBackgroundAppearance::Opaque;
+            if mounted.clear != clear {
+                window.set_background_appearance(appearance);
+                mounted.clear = clear;
+            }
+        }
+    }
+}
+
 pub(crate) struct Reader<'a> {
     pub window: &'a Window,
     pub cx: &'a App,

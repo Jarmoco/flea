@@ -79,11 +79,13 @@ impl Shell {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        super::glass::change_appearance(window, cx, snapshot.theme.glass.appearance());
         let unchanged = cx.try_global::<Fonts>() == Some(&snapshot.fonts)
             && cx.try_global::<crate::palette::Theme>() == Some(&snapshot.theme)
             && cx.try_global::<crate::palette::ParsedTheme>() == Some(&snapshot.parsed);
         if unchanged {
             self.sync_font_settings(cx);
+            window.refresh();
             return;
         }
         snapshot.install(cx);

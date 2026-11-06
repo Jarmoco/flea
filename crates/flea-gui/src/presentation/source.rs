@@ -180,6 +180,18 @@ impl Sources {
             input[5].is_some(),
             input[6].is_some(),
         );
+        if let Some(opacity) = flea::jsondoc::parse(text(7))
+            .ok()
+            .and_then(|data| data.get("themeOpacity").and_then(|v| v.as_f64()))
+            .filter(|n| (0.0..=100.0).contains(n))
+        {
+            let alpha = (opacity * 255.0 / 100.0).round() as u8;
+            theme.glass.wanted_alpha = alpha;
+            theme.glass.wanted_list_alpha = alpha;
+            theme.glass.automatic = false;
+            theme.glass.pins_opaque = alpha == 255;
+            theme.glass.chrome_inks = None;
+        }
         let (family, failure) =
             match super::face_cache::family_within(&input[3..5], &self.cache, probe, deadline) {
                 Ok(family) => (family, None),
@@ -239,6 +251,11 @@ mod tests {
             seeded.theme,
             Theme::from_text(&flea::seed_theme::palette("#f05533").unwrap())
         );
+        input[7] = Some(r#"{"themeOpacity":50}"#.into());
+        let glass = resolve(&input).theme.glass;
+        assert_eq!(glass.wanted_alpha, 128);
+        assert_eq!(glass.wanted_list_alpha, 128);
+        assert!(!glass.pins_opaque);
         input[7] = Some(r#"{"themeSeed":""}"#.into());
         assert_eq!(
             resolve(&input).theme,

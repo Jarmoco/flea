@@ -87,6 +87,19 @@ mod persistence_tests {
     use crate::{jsondoc, uischema, uistate};
 
     #[test]
+    fn opacity_is_bounded_and_resettable() {
+        let data = uischema::defaults();
+        for value in ["-1", "0", "50", "100"] {
+            let input = format!(r#"{{"themeOpacity":{value}}}"#);
+            assert!(uistate::patched(&data, &jsondoc::parse(&input).unwrap()).is_ok());
+        }
+        for value in ["-2", "101"] {
+            let input = format!(r#"{{"themeOpacity":{value}}}"#);
+            assert!(uistate::patched(&data, &jsondoc::parse(&input).unwrap()).is_err());
+        }
+    }
+
+    #[test]
     fn state_accepts_only_empty_or_rgb_and_preserves_other_settings() {
         let data = uischema::defaults();
         let patch = |text| jsondoc::parse(text).unwrap();

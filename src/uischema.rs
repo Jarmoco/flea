@@ -55,6 +55,7 @@ pub const DEFAULTS: &str = r#"{
   "previewFacts": "compact",
   "keys": "default",
   "themeSeed": "",
+  "themeOpacity": -1,
   "display": { "textSize": { "mode": "system" }, "hyprlandIcons": false },
   "menu": { "hidden": ["delete", "openTerminal", "placeMenu", "runScript",
             "moveto", "copyto", "properties", "permissions", "copyAs", "pasteAs",
@@ -243,6 +244,7 @@ pub const SCHEMA: &[(&str, Rule)] = &[
     // this build cannot honour falls back to default, which is also what a fresh ui.json holds.
     ("keys", Rule::Word(&["default", "vim", "mac", "windows"])),
     ("themeSeed", Rule::SeedColor),
+    ("themeOpacity", Rule::Count(-1.0, 100.0)),
     ("display", Rule::Group(DISPLAY)),
     ("menu", Rule::Group(MENU)),
     ("updates", Rule::Group(UPDATES)),
@@ -318,7 +320,7 @@ mod tests {
                 "startFolder",
                 "lastPath", "lastTabs", "newTab", "trashAutoEmpty", "trashSweptOn", "places", "shelf",
                 "preview", "previewFacts", "keys",
-                "themeSeed", "display", "menu", "updates", "plugins", "stateVersion"
+                "themeSeed", "themeOpacity", "display", "menu", "updates", "plugins", "stateVersion"
             ]
         );
         assert_eq!(d.get(STATE_VERSION).and_then(Json::as_f64), Some(4.0), "a fresh document is already stamped");

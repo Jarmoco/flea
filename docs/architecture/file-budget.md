@@ -1661,3 +1661,5 @@ The COMPOSE-M3 closing join removed a duplicate `menu_identity` from `crates/fle
 CTL2 RC2 ruling (2026-11-02) records `src/tui/cells.rs` at 428 for the approved Arabic visual-order cells, a scoped increase from 426. The composed `src/i18n/tests.rs` is split into its existing behavior tests and `src/i18n/test_contracts.rs` for catalog-source contracts. Test bodies move byte for byte; no compression or global limit change is used.
 
 The seed theme setting moves the scoped ceilings for `src/uischema.rs` to 625 and `src/uistate.rs` to 857 lines, re-derived with `wc -l`, for its default and RGB validation. The global limits are unchanged.
+
+The theme opacity preference moves the scoped ceiling for src/uischema.rs to 627 lines, re-derived with wc -l; the global limit is unchanged.
