@@ -164,20 +164,46 @@ fn settled(path: &std::path::Path, previous: Option<&str>, pause: impl FnOnce())
     pause();
     (read(path)? == first).then_some(first)
 }
+// Read the shared seed on the watcher thread, with the selected theme as fallback.
+fn user_palette(path: &std::path::Path) -> Option<String> {
+    let state = flea::uistore::Store::user().ok().map(|store| store.read());
+    palette_for(state.as_ref(), path)
+}
+
+fn palette_for(state: Option<&flea::jsondoc::Json>, path: &std::path::Path) -> Option<String> {
+    let seed = state.and_then(|state| state.get("themeSeed")).and_then(|v| v.as_str())
+        .and_then(flea::seed_theme::palette);
+    seed.or_else(|| match read(path) {
+        Some(text) if !parse(&text).is_empty() => Some(text),
+        Some(_) => None,
+        None => Some("background='#101315'".into()),
+    })
+}
+
 // A single worker follows theme switches without file reads in the event loop.
 pub struct Watch {
     pub updates: std::sync::mpsc::Receiver<String>,
     stop: std::sync::mpsc::Sender<()>,
 }
 impl Watch {
-    pub fn start(path: std::path::PathBuf) -> Self {
+    #[cfg(test)]
+    pub fn start(path: std::path::PathBuf) -> Self { Self::start_with(path, false) }
+    pub fn user(path: std::path::PathBuf) -> Self { Self::start_with(path, true) }
+    fn start_with(path: std::path::PathBuf, use_seed: bool) -> Self {
         let (tx, updates) = std::sync::mpsc::sync_channel(1);
         let (stop, wait) = std::sync::mpsc::channel();
         std::thread::spawn(move || {
             let mut previous: Option<String> = None;
             loop {
                 let mut stopped = false;
-                if let Some(text) = settled(&path, previous.as_deref(), || stopped = wait.recv_timeout(THEME_SETTLE).is_ok()) {
+                let mut pause = || stopped = wait.recv_timeout(THEME_SETTLE).is_ok();
+                let next = if use_seed {
+                    let first = user_palette(&path).filter(|text| previous.as_deref() != Some(text.as_str()));
+                    first.and_then(|first| { pause(); (user_palette(&path).as_deref() == Some(first.as_str())).then_some(first) })
+                } else {
+                    settled(&path, previous.as_deref(), pause)
+                };
+                if let Some(text) = next {
                     if tx.try_send(text.clone()).is_ok() { previous = Some(text); }
                 }
                 if stopped || wait.recv_timeout(THEME_POLL).is_ok() { break; }

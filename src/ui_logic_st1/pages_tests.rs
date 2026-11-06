@@ -265,7 +265,7 @@ fn columns_rows_lock_name_and_read_stored_columns() {
 #[test]
 fn sections_carry_plugins_in_place_of_the_shelf() {
     let ids: Vec<&str> = SECTIONS.iter().map(|s| s.id).collect();
-    assert_eq!(ids, ["view", "places", "plugins", "preview", "keys", "display", "menus", "about"]);
+    assert_eq!(ids, ["view", "places", "plugins", "preview", "keys", "theme", "display", "menus", "about"]);
     assert_eq!(section_index("nothing"), 0);
     assert_eq!(say(&Text::Key(SECTIONS[2].label)), "Plugins");
     let data = json("{}");

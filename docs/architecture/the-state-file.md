@@ -283,3 +283,5 @@ Open, Unmount, Eject and the case proves Ctrl+E and the menu both release it.
 Navigation: [architecture index](README.md),
 [load-bearing rules](../../AGENTS.md#the-seven-load-bearing-rules).
 Source paths in this reference are relative to the repository root.
+
+The `themeSeed` setting is either empty (use the selected desktop or Flea palette) or a six-digit RGB hex color. The GPUI presentation service watches the state file alongside the theme files and derives the palette from a nonempty seed, so saved changes reach other windows. Settings validates the seed before writing its own leaf through the shared state writer. The TUI watcher also resolves the same seed, falling back to the selected palette when it is cleared.

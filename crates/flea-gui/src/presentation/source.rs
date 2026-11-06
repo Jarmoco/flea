@@ -22,21 +22,26 @@ impl Snapshot {
     }
 }
 
-pub(super) type Inputs = [Option<String>; 7];
+pub(super) type Inputs = [Option<String>; 8];
 /// The most bytes one input may hold; a larger file is refused, never cut.
 pub(super) const INPUT_CAP: usize = 65536;
-pub(super) type Stamps = [Option<(u64, u64, u64, i64, i64, i64, i64, u32)>; 7];
+pub(super) type Stamps = [Option<(u64, u64, u64, i64, i64, i64, i64, u32)>; 8];
 
 /// The seven files a presentation reads, and where the resolved font family is cached.
 pub(super) struct Sources {
-    inputs: [PathBuf; 7],
+    inputs: [PathBuf; 8],
     cache: PathBuf,
 }
 
 impl Sources {
     #[cfg(test)]
     pub fn at(inputs: [PathBuf; 7], cache: PathBuf) -> Self {
-        Self { inputs, cache }
+        let mut all: [PathBuf; 8] =
+            std::array::from_fn(|_| PathBuf::from("/proc/self/flea-no-state"));
+        for (to, from) in all.iter_mut().zip(inputs) {
+            *to = from;
+        }
+        Self { inputs: all, cache }
     }
 
     pub fn current() -> Self {
@@ -65,6 +70,7 @@ impl Sources {
                 config.join("fontconfig/conf.d/50-omarchy-input-method.conf"),
                 toggles.join("window-opaque.lua"),
                 toggles.join("window-glassy.lua"),
+                state.join("flea/ui.json"),
             ],
             cache: state.join("flea/fc-match-monospace"),
         }
@@ -89,15 +95,15 @@ impl Sources {
         dirs
     }
 
-    fn read_one(path: &Path) -> io::Result<Option<String>> {
+    fn read_one(path: &Path, cap: usize) -> io::Result<Option<String>> {
         let mut text = String::new();
         let file = match flea::backend::regfile::open_if_regular(path, 0) {
             Ok(file) => file,
             Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
             Err(error) => return Err(error),
         };
-        file.take(INPUT_CAP as u64 + 1).read_to_string(&mut text)?;
-        if text.len() > INPUT_CAP {
+        file.take(cap as u64 + 1).read_to_string(&mut text)?;
+        if text.len() > cap {
             return Err(io::ErrorKind::InvalidData.into());
         }
         Ok(Some(text))
@@ -106,8 +112,8 @@ impl Sources {
     /// Every input or the first failure: a live change that cannot be read keeps the last complete snapshot.
     pub fn read(&self) -> io::Result<Inputs> {
         let mut inputs = std::array::from_fn(|_| None);
-        for (path, input) in self.inputs.iter().zip(&mut inputs) {
-            *input = Self::read_one(path)?;
+        for (at, (path, input)) in self.inputs.iter().zip(&mut inputs).enumerate() {
+            *input = Self::read_one(path, if at == 7 { 16 * 1024 * 1024 } else { INPUT_CAP })?;
         }
         Ok(inputs)
     }
@@ -116,8 +122,8 @@ impl Sources {
     pub fn read_for_launch(&self) -> (Inputs, Vec<String>) {
         let mut inputs = std::array::from_fn(|_| None);
         let mut failures = Vec::new();
-        for (path, input) in self.inputs.iter().zip(&mut inputs) {
-            match Self::read_one(path) {
+        for (at, (path, input)) in self.inputs.iter().zip(&mut inputs).enumerate() {
+            match Self::read_one(path, if at == 7 { 16 * 1024 * 1024 } else { INPUT_CAP }) {
                 Ok(text) => *input = text,
                 Err(error) => failures.push(format!("{}: {error}", path.display())),
             }
@@ -160,9 +166,15 @@ impl Sources {
         deadline: std::time::Duration,
     ) -> (Snapshot, Option<io::Error>) {
         let text = |at: usize| input[at].as_deref().unwrap_or("");
-        let (mut theme, parsed) = Theme::from_text_observed(text(0));
+        let seed_palette = flea::jsondoc::parse(text(7)).ok().and_then(|data| {
+            data.get("themeSeed")
+                .and_then(|value| value.as_str())
+                .and_then(flea::seed_theme::palette)
+        });
+        let (mut theme, parsed) =
+            Theme::from_text_observed(seed_palette.as_deref().unwrap_or_else(|| text(0)));
         theme.glass = crate::window::glass::Inputs::resolve(
-            text(0),
+            seed_palette.as_deref().unwrap_or_else(|| text(0)),
             text(1),
             text(2),
             input[5].is_some(),
@@ -189,9 +201,49 @@ mod tests {
 
     fn sources(inputs: [PathBuf; 7]) -> Sources {
         Sources {
-            inputs,
+            inputs: {
+                let mut all = std::array::from_fn(|_| PathBuf::from("/proc/self/flea-no-state"));
+                for (to, from) in all.iter_mut().zip(inputs) {
+                    *to = from;
+                }
+                all
+            },
             cache: PathBuf::from("/proc/self/flea-u01-no-cache/entry"),
         }
+    }
+
+    #[test]
+    fn seed_overrides_the_source_palette_and_empty_restores_it() {
+        let source = sources(std::array::from_fn(|_| {
+            PathBuf::from("/proc/self/flea-u01-absent-input")
+        }));
+        let mut input: Inputs = std::array::from_fn(|_| None);
+        input[0] = Some("background='#101010'\naccent='#123456'".into());
+        input[7] = Some(r##"{"themeSeed":"#f05533"}"##.into());
+        let resolve = |input: &Inputs| {
+            source
+                .resolve_with(
+                    input,
+                    "monospace",
+                    || {
+                        let mut command = Command::new("/bin/sh");
+                        command.args(["-c", "exit 1"]);
+                        command
+                    },
+                    super::super::face::LAUNCH,
+                )
+                .0
+        };
+        let seeded = resolve(&input);
+        assert_eq!(
+            seeded.theme,
+            Theme::from_text(&flea::seed_theme::palette("#f05533").unwrap())
+        );
+        input[7] = Some(r#"{"themeSeed":""}"#.into());
+        assert_eq!(
+            resolve(&input).theme,
+            Theme::from_text(input[0].as_deref().unwrap())
+        );
     }
 
     #[test]
@@ -201,7 +253,7 @@ mod tests {
         }));
         assert_eq!(
             absent.read().unwrap(),
-            [None, None, None, None, None, None, None]
+            [None, None, None, None, None, None, None, None]
         );
         let failed = sources(std::array::from_fn(|_| PathBuf::from("/proc/self")));
         assert_eq!(
@@ -209,13 +261,14 @@ mod tests {
             io::ErrorKind::InvalidInput
         );
         let (launch, failures) = failed.read_for_launch();
-        assert_eq!(launch, [None, None, None, None, None, None, None]);
+        assert_eq!(launch, [None, None, None, None, None, None, None, None]);
         assert_eq!(failures.len(), 7);
         let valid = sources(std::array::from_fn(|_| PathBuf::from("/proc/self/status")));
         assert!(valid
             .read()
             .unwrap()
             .iter()
+            .take(7)
             .all(|value| value.as_ref().is_some_and(|text| !text.is_empty())));
     }
 

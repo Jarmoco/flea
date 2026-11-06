@@ -124,3 +124,13 @@ fn the_scrim_mixes_every_ink_halfway_to_the_ground() {
     assert!(scrim.dim.is_none());
     assert_eq!(Theme::with_depth(BENCH, Depth::Indexed).dim.unwrap().depth, Depth::Indexed);
 }
+
+#[test]
+fn seed_palette_overrides_and_clearing_restores_the_selected_theme() {
+    let root = crate::backend::testdir::TestDir::new("tui-seed-theme");
+    let path = root.file("colors.toml", BENCH);
+    let state = flea::jsondoc::parse(r##"{"themeSeed":"#ff6600"}"##).unwrap();
+    assert_eq!(palette_for(Some(&state), &path), flea::seed_theme::palette("#ff6600"));
+    let reset = flea::jsondoc::parse(r#"{"themeSeed":""}"#).unwrap();
+    assert_eq!(palette_for(Some(&reset), &path).as_deref(), Some(BENCH));
+}

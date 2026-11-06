@@ -175,8 +175,8 @@ src/tui/input.rs 455
 src/tui/model.rs 1292
 src/tui/mod.rs 459
 src/tui/render.rs 260
-src/uischema.rs 622
-src/uistate.rs 856
+src/uischema.rs 625
+src/uistate.rs 857
 src/uistore.rs 568
 src/vulkan.rs 751
 tests/js/columns.js 687

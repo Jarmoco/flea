@@ -302,7 +302,7 @@ impl Panel {
         self.show_section(section);
     }
 
-    fn write(&mut self, patch: &Json) {
+    pub(super) fn write(&mut self, patch: &Json) {
         self.save_error = self.store.write(patch).err();
         self.rebuild();
         self.reveal();

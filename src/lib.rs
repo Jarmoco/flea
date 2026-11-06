@@ -27,6 +27,7 @@ pub mod plugin_runtime;
 pub mod qscrash;
 pub mod preview_model;
 pub mod rawname;
+pub mod seed_theme;
 pub mod theme;
 pub mod themedir;
 pub mod ui_logic_fb1;

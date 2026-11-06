@@ -175,9 +175,21 @@ impl Service {
                         seen = None;
                         continue;
                     }
+                    let seed = |input: &Option<String>| {
+                        input
+                            .as_deref()
+                            .and_then(|text| flea::jsondoc::parse(text).ok())
+                            .and_then(|doc| {
+                                doc.get("themeSeed")
+                                    .and_then(|v| v.as_str())
+                                    .map(str::to_owned)
+                            })
+                    };
+                    let reset_seed = seed(&inputs[7]).is_some_and(|s| !s.is_empty())
+                        && (changed[7].is_none() || seed(&changed[7]).as_deref() == Some(""));
                     inputs = changed;
                     let mut state = worker.lock().expect("presentation subscribers");
-                    if !snapshot.parsed.0 && state.current.parsed.0 {
+                    if !snapshot.parsed.0 && state.current.parsed.0 && !reset_seed {
                         continue;
                     }
                     if state.current == snapshot {

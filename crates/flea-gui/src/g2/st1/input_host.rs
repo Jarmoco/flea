@@ -17,7 +17,13 @@ impl Host for SettingsView {
         &mut self.editor
     }
     fn draft(&self) -> Option<&str> {
-        self.panel.query.as_deref()
+        if self.panel.query.is_some() {
+            self.panel.query.as_deref()
+        } else if self.panel.section == "theme" && self.panel.side == super::Side::Pane {
+            self.seed_draft.as_deref()
+        } else {
+            None
+        }
     }
     fn input_focus(&self, _: &Window) -> &FocusHandle {
         &self.focus
@@ -27,7 +33,12 @@ impl Host for SettingsView {
     }
     fn edited(&mut self, cx: &mut Context<Self>) {
         if let Some(text) = self.editor.publish() {
-            self.panel.query_changed(text);
+            if self.panel.query.is_some() {
+                self.panel.query_changed(text);
+            } else if self.panel.section == "theme" {
+                self.seed_draft = Some(text);
+                self.seed_invalid = false;
+            }
         }
         cx.notify();
     }

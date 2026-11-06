@@ -4,7 +4,7 @@ mod claims;
 mod clip;
 mod defaults;
 mod desktopid;
-use flea::error;
+use flea::{error, seed_theme};
 mod gui;
 mod heap;
 mod hyprkeys;

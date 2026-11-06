@@ -24,6 +24,8 @@ mod m9_g2rows_02;
 
 pub struct SettingsView {
     pub(super) editor: Editor,
+    pub(super) seed_draft: Option<String>,
+    pub(super) seed_invalid: bool,
     pub panel: Panel,
     pub focus: FocusHandle,
     pub typeface: Typeface,
@@ -38,6 +40,8 @@ impl SettingsView {
         Self {
             panel,
             editor: Editor::default(),
+            seed_draft: None,
+            seed_invalid: false,
             plugins: None,
             probe: super::probe::Probe::default(),
             focus: cx.focus_handle(),
@@ -46,6 +50,9 @@ impl SettingsView {
     }
 
     fn key_down(&mut self, event: &KeyDownEvent, window: &mut Window, cx: &mut Context<Self>) {
+        if self.seed_key(event, window, cx) {
+            return;
+        }
         if self.query_key(event, window, cx) {
             return;
         }
@@ -274,6 +281,9 @@ impl SettingsView {
     }
 
     fn pane(&mut self, ink: &Ink, window: &Window, cx: &mut Context<Self>) -> Stateful<Div> {
+        if self.panel.section == "theme" && !self.panel.searching() {
+            return self.theme_pane(ink, cx);
+        }
         if self.panel.section == "plugins" && !self.panel.searching() {
             if let Some(view) = &self.plugins {
                 return div()
@@ -378,6 +388,7 @@ impl SettingsView {
 
 impl Render for SettingsView {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        self.sync_seed();
         self.sync_editor();
         self.sync_plugin_input(cx);
         self.probe.clear();

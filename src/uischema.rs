@@ -54,6 +54,7 @@ pub const DEFAULTS: &str = r#"{
   },
   "previewFacts": "compact",
   "keys": "default",
+  "themeSeed": "",
   "display": { "textSize": { "mode": "system" }, "hyprlandIcons": false },
   "menu": { "hidden": ["delete", "openTerminal", "placeMenu", "runScript",
             "moveto", "copyto", "properties", "permissions", "copyAs", "pasteAs",
@@ -74,6 +75,7 @@ pub const SIDEBAR_STOPS: [f64; 4] = [160.0, 192.0, 224.0, 256.0];
 // What a value has to be for the key to keep it. A key that fails its rule falls back to its default.
 pub enum Rule {
     Bool,
+    SeedColor,
     Word(&'static [&'static str]),
     // columns names what the list row SHOWS, so it holds each column key at most once and name always.
     Columns,
@@ -240,6 +242,7 @@ pub const SCHEMA: &[(&str, Rule)] = &[
     // SettingsKeys.html's four-value chooser over ui/js/Keymap.js's shared tables. A stored name
     // this build cannot honour falls back to default, which is also what a fresh ui.json holds.
     ("keys", Rule::Word(&["default", "vim", "mac", "windows"])),
+    ("themeSeed", Rule::SeedColor),
     ("display", Rule::Group(DISPLAY)),
     ("menu", Rule::Group(MENU)),
     ("updates", Rule::Group(UPDATES)),
@@ -315,7 +318,7 @@ mod tests {
                 "startFolder",
                 "lastPath", "lastTabs", "newTab", "trashAutoEmpty", "trashSweptOn", "places", "shelf",
                 "preview", "previewFacts", "keys",
-                "display", "menu", "updates", "plugins", "stateVersion"
+                "themeSeed", "display", "menu", "updates", "plugins", "stateVersion"
             ]
         );
         assert_eq!(d.get(STATE_VERSION).and_then(Json::as_f64), Some(4.0), "a fresh document is already stamped");

@@ -196,6 +196,7 @@ fn normalized(rule: Option<&Rule>, value: &Json) -> Json {
 fn fits(rule: &Rule, value: &Json) -> bool {
     match rule {
         Rule::Bool => value.as_bool().is_some(),
+        Rule::SeedColor => value.as_str().is_some_and(|s| s.is_empty() || crate::seed_theme::normalize(s).is_some()),
         Rule::Word(words) => value.as_str().map(|s| words.contains(&s)).unwrap_or(false),
         Rule::Columns => is_column_set(value),
         Rule::Favourites => value.as_array().is_some(),
