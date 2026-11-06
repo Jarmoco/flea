@@ -1,3 +1,5 @@
+> **Linux-wide fork:** This is a fork of [Flea](https://github.com/thisisgm/flea), adapted to work across Linux distributions and desktop environments.
+
 <p align="center">
   <img src="docs/images/icon.svg" width="72" height="72" alt="Flea">
 </p>
@@ -9,19 +11,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/tcballard/omarchy-badges"><img src="https://raw.githubusercontent.com/tcballard/omarchy-badges/85f859029e236e784e7b05ada6dbe73506d07a91/badges/v1/built-for-omarchy.svg" alt="Built for Omarchy"></a>
-</p>
-
-<p align="center">
   <a href="#install">Install</a> ·
   <a href="#views">Views</a> ·
   <a href="#performance">Performance</a> ·
   <a href="#keyboard">Keyboard</a> ·
-  <a href="https://github.com/thisisgm/flea/releases">Releases</a>
+  <a href="https://github.com/Jarmoco/flea/releases">Releases</a>
 </p>
 
 <p align="center">
-  <img src="docs/images/release-0.4.0-themes.gif" alt="Flea 0.4.0 cycling through eight dark Omarchy themes at different transparencies, with a photo in the preview column">
+  <img src="docs/images/release-0.4.0-themes.gif" alt="Flea cycling through dark themes at different transparencies, with a photo in the preview column">
 </p>
 
 - **Four views.** List, columns, grid and two panes, with tabs and natural sorting.
@@ -37,47 +35,11 @@
 
 ## Install
 
-Flea is published in the Omarchy Package Repository. On Omarchy, install it and make it your
-default file manager, file chooser and the app opened by **Super+Shift+F**:
+Releases are available in [GitHub Releases](https://github.com/Jarmoco/flea/releases).
 
-```bash
-omarchy pkg add flea && flea --default
-```
-
-On any other Linux desktop, build it from source with the command under [Build](#build); Flea runs
-without Omarchy, and picks up Omarchy's themes, key bindings, bar shelf and updater when that desktop
-is present. Run `flea --default` from a terminal in your session so file dialogs switch at once.
-`flea --default off` undoes it, and Settings > About has the same switch. To try Flea without
-changing your defaults, install the package and do not run `flea --default`. Updates come with
-`omarchy update` on Omarchy.
-
-On an AUR `flea-bin` or `flea-git` install, run this and answer `y` when pacman asks to remove it:
-
-```bash
-sudo pacman -S flea
-```
-
-<details>
-<summary>File chooser only, development build and removal</summary>
-
-Use Flea for portal Open/Save dialogs without changing your default file manager:
-
-```bash
-flea --picker
-```
-
-To try unreleased changes from `main`, [build Flea from source](#build).
-
-Before removing Flea, undo its desktop integration, then drop the package:
-
-```bash
-flea --default off
-omarchy pkg drop flea
-```
-
-[Installation details](docs/install.md) cover dependencies, desktop integration and removal.
-
-</details>
+Flea requires a Linux graphical session and compatible system libraries; optional features may
+require additional desktop services or utilities. Release assets and their instructions will specify
+the supported architectures and any additional requirements.
 
 ## Views
 
@@ -96,31 +58,21 @@ omarchy pkg drop flea
   <img src="docs/images/pdf.png" alt="PDF preview with page navigation">
 </p>
 
-**The shelf** in the Omarchy bar holds files you send to it from any menu. Drag them out into any
-app, or pin the ones you reuse.
-
 **Dragging** moves files within a device and copies them across devices. Hold Ctrl to copy, Shift to
 move, or both to link. Drop files on Trash in the sidebar to trash them, and `z` brings them back.
 Drag a file into a terminal to paste its path.
 
 <p align="center">
-  <img src="docs/images/shelf.png" width="49%" alt="The shelf card open over Flea, with thumbnails, pins and the latest recordings">
   <img src="docs/images/iphone.png" width="49%" alt="An iPhone camera roll browsed over AFC, with HEIC thumbnails and a preview">
 </p>
 
-**Transparency** follows the theme's `shell.toml`. Put a value from 0 to 1 in Flea's own
-`~/.config/flea/shell.toml`, in the selected theme's `shell.toml`, or, on Omarchy, in
-`~/.config/omarchy/shell.toml` for every theme:
-
-```toml
-[flea]
-background-alpha = 0.34
-```
+**Appearance** can be customized in Settings: choose a seed color, window opacity, and an
+installed icon theme.
 
 ## Performance
 
-Measured on 2 November 2026 with the 0.4.0 candidate at `8a7fd82f`, before the final
-release cut. Tables show medians; [full observed ranges, versions and methodology](docs/bench/0.4.0-20261102.md)
+The following measurements describe the upstream Flea 0.4.0 candidate at `8a7fd82f`,
+measured on 2 November 2026 before the final release cut. They have not been remeasured for this fork. Tables show medians; [full observed ranges, versions and methodology](docs/bench/0.4.0-20261102.md)
 are recorded with the data.
 
 ### 100,000 files
@@ -207,29 +159,11 @@ Press **?** for the full keymap, or **,** to change settings.
 The Windows preset uses `Ctrl+Shift+1/2/3/4` for views and `Ctrl+Y` for redo.
 See [the full key table](keys.toml) for preset bindings and pointer actions.
 
-## Build
+## Development
 
-Requires Rust and a C toolchain, plus the runtime libraries listed under `depends` and
-`optdepends` in the [PKGBUILD](PKGBUILD). Omarchy is supported when it is present but is not
-required. See [installation details](docs/install.md) for runtime and optional dependencies.
-
-```bash
-cargo build --locked --release --workspace
-./target/release/flea --gui
-```
-
-Pass a directory to open it, or `--select <path>` to reveal a file.
-
-`./tests/run-all.sh` runs the headless suites, and [the protocol guide](docs/protocol.md) documents
-the backend.
-
-See [PLUGINS.md](PLUGINS.md) to write, validate, install and debug a Flea plugin, with a working example for each kind.
-
-## Support
-
-If this saved you an afternoon, you can
-[sponsor me on GitHub](https://github.com/sponsors/thisisgm) or
-[buy me a coffee](https://buymeacoffee.com/thisisgm).
+The source and issue tracker are available on [GitHub](https://github.com/Jarmoco/flea).
+The backend is described in the [protocol guide](docs/protocol.md), and
+[PLUGINS.md](PLUGINS.md) covers writing and debugging plugins.
 
 ## Licence
 
